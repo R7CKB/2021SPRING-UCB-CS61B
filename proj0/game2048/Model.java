@@ -5,7 +5,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author R7CKB
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -113,12 +113,64 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        // the side means direction of your control(up⬆,down⬇,left and right).
+        // we use helper function to finish this method.
+        // we see each direction as the north direction
+        board.setViewingPerspective(side);
+        int maxSize = board.size() - 1;
+        for (int col = 0; col < board.size(); col++) {
+            for (int row = maxSize; row >= 0; row--) {
 
+                Tile currentTile = board.tile(col, row);
+                int nextNonEmptyRow = findNextNonEmptyRow(col, row);
+
+                // if this col is full, switch to next col.
+                if (nextNonEmptyRow == -1) {
+                    break;
+                }
+
+                Tile nextNonEmptyTile = board.tile(col, nextNonEmptyRow);
+
+                if (currentTile == null || nextNonEmptyTile.value() == currentTile.value()) {
+                    changed = true;
+                    // for nextNonEmptyTile.value() == currentTile.value()
+                    // move to the currentTile
+                    if (board.move(col, row, nextNonEmptyTile)) {
+                        score += 2 * nextNonEmptyTile.value();
+                    } else {
+                        // for currentTile == null.
+                        // the move is a merge,but a little special,
+                        // so we update the row to make it as the maxSize.
+                        // like following:
+                        // [ ]
+                        // [2]
+                        // [2]
+                        // [ ]
+                        row++;
+                    }
+                }
+            }
+        }
+        board.setViewingPerspective(Side.NORTH);
         checkGameOver();
         if (changed) {
             setChanged();
         }
         return changed;
+    }
+
+    /**
+     * Find the location of the next non-empty tile below the given column and row.
+     */
+    private int findNextNonEmptyRow(int col, int row) {
+        for (int nextRow = row - 1; nextRow >= 0; nextRow--) {
+            if (board.tile(col, nextRow) != null) {
+                return nextRow;
+            }
+        }
+
+        // (in this column) all tiles are full.
+        return -1;
     }
 
     /** Checks if the game is over and sets the gameOver variable
@@ -138,6 +190,15 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        // use double loops to finish this method
+        // size means the row length or col length.
+        for (int col = 0; col < b.size(); col++) {
+            for (int row = 0; row < b.size(); row++) {
+                if (b.tile(col, row) == null) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -148,6 +209,17 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        // This method is easy,too.
+        for (int col = 0; col < b.size(); col++) {
+            for (int row = 0; row < b.size(); row++) {
+                if (b.tile(col, row) == null) {
+                    continue;
+                }
+                if (b.tile(col, row).value() == MAX_PIECE) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -159,6 +231,37 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        // This is not easy,you need to look before you leap.
+        // you should think about the helper method
+        return emptySpaceExists(b) || adjacentSameTiles(b);
+    }
+
+    /**
+     * Return true if there are two adjacent tiles with the same value.
+     */
+    public static boolean adjacentSameTiles(Board b) {
+        // we use two helper methods to finish this job.
+        // one loop examines the row, another loop examines the col.
+        int value;
+        for (int col = 0; col < b.size(); col++) {
+            value = b.tile(col, 0).value();
+            for (int row = 1; row < b.size(); row++) {
+                if (b.tile(col, row).value() == value && b.tile(col, row).value() != 0) {
+                    return true;
+                }
+                // update the value
+                value = b.tile(col, row).value();
+            }
+        }
+        for (int row = 0; row < b.size(); row++) {
+            value = b.tile(0, row).value();
+            for (int col = 1; col < b.size(); col++) {
+                if (b.tile(col, row).value() == value && b.tile(col, row).value() != 0) {
+                    return true;
+                }
+                value = b.tile(col, row).value();
+            }
+        }
         return false;
     }
 
