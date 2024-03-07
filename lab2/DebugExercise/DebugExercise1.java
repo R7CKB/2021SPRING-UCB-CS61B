@@ -6,6 +6,11 @@ package DebugExercise;
  */
 public class DebugExercise1 {
     public static int divideThenRound(int top, int bottom) {
+        // the error may occur because the bottom can't be zero.
+        if (bottom == 0) {
+            System.out.println("Cannot divide by zero.");
+            return 0;
+        }
         int quotient = top / bottom;
         int result = Math.round(quotient);
         return result;
