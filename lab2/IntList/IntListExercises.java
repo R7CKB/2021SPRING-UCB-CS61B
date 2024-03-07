@@ -10,7 +10,7 @@ public class IntListExercises {
      */
     public static void addConstant(IntList lst, int c) {
         IntList head = lst;
-        while (head!= null) {git
+        while (head!= null) {
             head.first += c;
             head = head.rest;
         }
