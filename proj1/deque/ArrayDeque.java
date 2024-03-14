@@ -122,10 +122,14 @@ public class ArrayDeque<Item> {
         } else if (items.length >= 16) {
             checkUtilization();
         }
-        int firstIndex = nextFirst + 1;
+        int firstIndex = nextFirst == (items.length - 1) ? 0 : nextFirst + 1;
         Item first = items[firstIndex];
         items[firstIndex] = null;
-        nextFirst = nextFirst + 1;
+        if (firstIndex == 0) {
+            nextLast -= 1;
+        } else {
+            nextFirst += 1;
+        }
         size -= 1;
         return first;
     }
@@ -141,10 +145,14 @@ public class ArrayDeque<Item> {
         } else if (items.length >= 16) {
             checkUtilization();
         }
-        int lastIndex = nextLast - 1;
+        int lastIndex = nextLast == 0 ? (items.length - 1) : (nextLast - 1);
         Item last = items[lastIndex];
         items[lastIndex] = null;
-        nextLast = nextLast - 1;
+        if (lastIndex == items.length - 1) {
+            nextFirst += 1;
+        } else {
+            nextLast -= 1;
+        }
         size -= 1;
         return last;
     }
@@ -169,7 +177,7 @@ public class ArrayDeque<Item> {
 //    }
 
 
-//    public Iterator<T> iterator() {
+    //    public Iterator<T> iterator() {
 //        return null;
 //    }
 
