@@ -31,13 +31,13 @@ public class ArrayDeque<T> {
      *
      * @param capacity the new capacity of the array.
      */
-    public void resize(int capacity) {
+    private void resize(int capacity) {
         T[] newItems = (T[]) new Object[capacity];
-        int newNextFirst = capacity - 1;
-        int newNextLast = size;
-        System.arraycopy(items, 0, newItems, 0, size);
+        int newNextFirst = capacity - (size - nextFirst);
+        int startIndex = newNextFirst + 1;
+        System.arraycopy(items, 0, newItems, 0, nextLast); // copy the last items
+        System.arraycopy(items, nextLast, newItems, startIndex, items.length - nextLast);
         nextFirst = newNextFirst;
-        nextLast = newNextLast;
         items = newItems;
     }
 
@@ -91,17 +91,9 @@ public class ArrayDeque<T> {
      * Prints the items in the deque.
      */
     public void printDeque() {
-        int maxIndex = items.length - 1;
-        int endIndex = nextLast + 1;
-        for (int i = nextFirst; i <= maxIndex; i++) {
-            if (items[i] != null) {
-                System.out.print(items[i] + " ");
-            }
-        }
-        for (int i = 0; i < endIndex; i++) {
-            if (items[i] != null) {
-                System.out.print(items[i] + " ");
-            }
+        for (int i = 0; i < size; i++) {
+            T item = get(i);
+            System.out.print(item + " ");
         }
         System.out.println();
     }
@@ -109,7 +101,7 @@ public class ArrayDeque<T> {
     /**
      * Checks if the utilization of the array is less than 25% and resizes the array if necessary.
      */
-    public void checkUtilization() {
+    private void checkUtilization() {
         double utilization = 0.25;
         while (size < items.length * utilization) {
             resize(items.length / 2);
@@ -124,17 +116,13 @@ public class ArrayDeque<T> {
     public T removeFirst() {
         if (isEmpty()) {
             return null;
-        } else if (items.length >= 16) {
+        }
+        if (items.length >= 16) {
             checkUtilization();
         }
-        int firstIndex = (nextFirst + 1) % items.length;
-        T first = items[firstIndex];
-        items[firstIndex] = null;
-        if (firstIndex == 0) {
-            nextLast -= 1;
-        } else {
-            nextFirst += 1;
-        }
+        nextFirst = (nextFirst + 1) % items.length;
+        T first = items[nextFirst];
+        items[nextFirst] = null;
         size -= 1;
         return first;
     }
@@ -150,14 +138,9 @@ public class ArrayDeque<T> {
         } else if (items.length >= 16) {
             checkUtilization();
         }
-        int lastIndex = (nextLast - 1 + items.length) % items.length;
-        T last = items[lastIndex];
-        items[lastIndex] = null;
-        if (lastIndex == items.length - 1) {
-            nextFirst += 1;
-        } else {
-            nextLast -= 1;
-        }
+        nextLast = (nextLast - 1 + items.length) % items.length;
+        T last = items[nextLast];
+        items[nextLast] = null;
         size -= 1;
         return last;
     }
@@ -188,5 +171,4 @@ public class ArrayDeque<T> {
     //    public Iterator<T> iterator() {
 //        return null;
 //    }
-
 }

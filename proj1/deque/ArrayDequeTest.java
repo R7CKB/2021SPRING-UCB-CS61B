@@ -42,16 +42,18 @@ public class ArrayDequeTest {
 
     @Test
     /**
-     * Test the removeFirst() methods of ArrayDeque.
+     * Test the removeFirst() and removeLast() methods of ArrayDeque.
      */
     public void testRemoveFirst() {
         ArrayDeque<String> deque = new ArrayDeque<>();
-        deque.addLast("1");
-        assertEquals("should remove first element:1", "1", deque.removeFirst());
-        deque.addLast("2");
-        deque.addLast("3");
-        assertEquals("should remove first element:2", "2", deque.removeFirst());
+        deque.addFirst("1");
+        assertEquals("should remove first element:1", "1", deque.removeLast());
+        deque.addFirst("2");
+        deque.addFirst("3");
+        assertEquals("should remove first element:2", "2", deque.removeLast());
         assertEquals("should have size:1", 1, deque.size());
+        deque.addFirst("4");
+        deque.addLast("5");
         System.out.println("Printing out deque: ");
         deque.printDeque();
 
@@ -62,35 +64,12 @@ public class ArrayDequeTest {
         newDeque.addFirst("3");
         assertEquals("should remove first element:2", "3", newDeque.removeFirst());
         assertEquals("should have size:1", 1, newDeque.size());
+        newDeque.addLast("4");
+        newDeque.addFirst("5");
         System.out.println("Printing out new deque: ");
         newDeque.printDeque();
     }
 
-    @Test
-    /**
-     * Test the removeLast() methods of ArrayDeque.
-     */
-    public void testRemoveLast() {
-        ArrayDeque<String> deque = new ArrayDeque<>();
-        deque.addFirst("1");
-        assertEquals("should remove last element:1", "1", deque.removeLast());
-        deque.addFirst("2");
-        deque.addFirst("3");
-        assertEquals("should remove last element:2", "2", deque.removeLast());
-        assertEquals("should have size:1", 1, deque.size());
-        System.out.println("Printing out deque: ");
-        deque.printDeque();
-
-        ArrayDeque<String> newDeque = new ArrayDeque<>();
-        newDeque.addLast("1");
-        assertEquals("should remove last element:1", "1", newDeque.removeLast());
-        newDeque.addLast("2");
-        newDeque.addLast("3");
-        assertEquals("should remove last element:3", "3", newDeque.removeLast());
-        assertEquals("should have size:1", 1, newDeque.size());
-        System.out.println("Printing out new deque: ");
-        newDeque.printDeque();
-    }
 
     @Test
     /**
@@ -128,6 +107,8 @@ public class ArrayDequeTest {
         assertEquals("should have size:8", 8, deque.size());
         deque.addLast("9");
         assertEquals("should have size:9", 9, deque.size());
+        assertEquals("should get element:9", "9", deque.get(8));
+        deque.printDeque();
         for (int i = 0; i < 1000; i++) {
             deque.addLast(String.valueOf(i));
         }
