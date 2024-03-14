@@ -7,10 +7,10 @@ package deque;
 /**
  * An array-based implementation of a deque.
  *
- * @param <Item> the type of elements held in this deque.
+ * @param <T> the type of elements held in this deque.
  */
-public class ArrayDeque<Item> {
-    private Item[] items;
+public class ArrayDeque<T> {
+    private T[] items;
     private int size;
     private int nextFirst;
     private int nextLast;
@@ -20,7 +20,7 @@ public class ArrayDeque<Item> {
      */
     public ArrayDeque() {
         int initialSize = 8;
-        items = (Item[]) new Object[initialSize];
+        items = (T[]) new Object[initialSize];
         nextFirst = initialSize - 1;
         nextLast = 0;
         size = 0;
@@ -32,7 +32,7 @@ public class ArrayDeque<Item> {
      * @param capacity the new capacity of the array.
      */
     public void resize(int capacity) {
-        Item[] newItems = (Item[]) new Object[capacity];
+        T[] newItems = (T[]) new Object[capacity];
         int newNextFirst = capacity - 1;
         int newNextLast = size;
         System.arraycopy(items, 0, newItems, 0, size);
@@ -44,13 +44,13 @@ public class ArrayDeque<Item> {
     /**
      * Adds an item to the front of the deque.
      *
-     * @param item the item to add.
+     * @param t the item to add.
      */
-    public void addFirst(Item item) {
+    public void addFirst(T t) {
         if (size == items.length) {
             resize(items.length * 2);
         }
-        items[nextFirst] = item;
+        items[nextFirst] = t;
         size += 1;
         nextFirst -= 1;
     }
@@ -58,13 +58,13 @@ public class ArrayDeque<Item> {
     /**
      * Adds an item to the end of the deque.
      *
-     * @param item the item to add.
+     * @param t the item to add.
      */
-    public void addLast(Item item) {
+    public void addLast(T t) {
         if (size == items.length) {
             resize(items.length * 2);
         }
-        items[nextLast] = item;
+        items[nextLast] = t;
         size += 1;
         nextLast += 1;
     }
@@ -91,12 +91,17 @@ public class ArrayDeque<Item> {
      * Prints the items in the deque.
      */
     public void printDeque() {
-        int startIndex = nextFirst + 1;
-        for (int i = startIndex; i < items.length; i++) {
-            System.out.print(items[i] + " ");
+        int maxIndex = items.length - 1;
+        int endIndex = nextLast + 1;
+        for (int i = nextFirst; i <= maxIndex; i++) {
+            if (items[i] != null) {
+                System.out.print(items[i] + " ");
+            }
         }
-        for (int i = 0; i < nextLast; i++) {
-            System.out.print(items[i] + " ");
+        for (int i = 0; i < endIndex; i++) {
+            if (items[i] != null) {
+                System.out.print(items[i] + " ");
+            }
         }
         System.out.println();
     }
@@ -116,14 +121,14 @@ public class ArrayDeque<Item> {
      *
      * @return the item at the front of the deque, or null if the deque is empty.
      */
-    public Item removeFirst() {
+    public T removeFirst() {
         if (isEmpty()) {
             return null;
         } else if (items.length >= 16) {
             checkUtilization();
         }
-        int firstIndex = nextFirst == (items.length - 1) ? 0 : nextFirst + 1;
-        Item first = items[firstIndex];
+        int firstIndex = (nextFirst + 1) % items.length;
+        T first = items[firstIndex];
         items[firstIndex] = null;
         if (firstIndex == 0) {
             nextLast -= 1;
@@ -139,14 +144,14 @@ public class ArrayDeque<Item> {
      *
      * @return the item at the end of the deque, or null if the deque is empty.
      */
-    public Item removeLast() {
+    public T removeLast() {
         if (isEmpty()) {
             return null;
         } else if (items.length >= 16) {
             checkUtilization();
         }
-        int lastIndex = nextLast == 0 ? (items.length - 1) : (nextLast - 1);
-        Item last = items[lastIndex];
+        int lastIndex = (nextLast - 1 + items.length) % items.length;
+        T last = items[lastIndex];
         items[lastIndex] = null;
         if (lastIndex == items.length - 1) {
             nextFirst += 1;
@@ -163,11 +168,14 @@ public class ArrayDeque<Item> {
      * @param index the index of the item to return.
      * @return the item at the given index, or null if the index is out of range.
      */
-    public Item get(int index) {
+    public T get(int index) {
         if (index < 0 || index >= size) {
             return null;
+        } else if (nextFirst == items.length - 1) {
+            return items[index];
+        } else {
+            return items[(nextFirst + index + 1) % items.length];
         }
-        return items[index];
     }
 
 //    public boolean equals(Object o) {
@@ -180,6 +188,5 @@ public class ArrayDeque<Item> {
     //    public Iterator<T> iterator() {
 //        return null;
 //    }
-
 
 }

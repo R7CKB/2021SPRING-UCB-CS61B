@@ -17,7 +17,7 @@ public class LinkedListDequeTest {
      * && is the "and" operation. */
     public void addIsEmptySizeTest() {
 
-        LinkedListDeque<String> lld1 = new LinkedListDeque<String>();
+        ArrayDeque<String> lld1 = new ArrayDeque<>();
 
         assertTrue("A newly initialized LLDeque should be empty", lld1.isEmpty());
         lld1.addFirst("front");
@@ -36,6 +36,58 @@ public class LinkedListDequeTest {
         System.out.println("Printing out deque: ");
         lld1.printDeque();
 
+    }
+
+    @Test
+    public void testAddFirstAndRemoveFirst() {
+        LinkedListDeque<String> list = new LinkedListDeque<>();
+        list.addFirst("first");
+        assertEquals(1, list.size());
+        assertEquals("first", list.removeFirst());
+        assertTrue(list.isEmpty());
+    }
+
+    @Test
+    public void testAddLastAndRemoveLast() {
+        LinkedListDeque<String> list = new LinkedListDeque<>();
+        list.addLast("last");
+        assertEquals(1, list.size());
+        assertEquals("last", list.removeLast());
+        assertTrue(list.isEmpty());
+    }
+
+    @Test
+    public void testIsEmptyAndSize() {
+        LinkedListDeque<String> list = new LinkedListDeque<>();
+        assertTrue(list.isEmpty());
+        assertEquals(0, list.size());
+        list.addFirst("item1");
+        assertFalse(list.isEmpty());
+        assertEquals(1, list.size());
+    }
+
+    @Test
+    public void testGetAndRemove() {
+        LinkedListDeque<String> deque = new LinkedListDeque<>();
+        deque.addLast("item1");
+        deque.addLast("item2");
+        deque.addLast("item3");
+        assertEquals("item2", deque.get(1));
+        assertEquals("item1", deque.removeFirst());
+        assertEquals("item3", deque.removeLast());
+        assertEquals(1, deque.size());
+        assertEquals("item2", deque.removeFirst());
+        assertEquals(0, deque.size());
+    }
+
+    @Test
+    /** Tests the getRecursive() method. */
+    public void testGetRecursive() {
+        LinkedListDeque<String> deque = new LinkedListDeque<>();
+        deque.addLast("item1");
+        deque.addLast("item2");
+        deque.addLast("item3");
+        assertEquals("item2", deque.getRecursive(1));
     }
 
     @Test
@@ -84,8 +136,8 @@ public class LinkedListDequeTest {
     public void multipleParamTest() {
 
 
-        LinkedListDeque<String>  lld1 = new LinkedListDeque<String>();
-        LinkedListDeque<Double>  lld2 = new LinkedListDeque<Double>();
+        LinkedListDeque<String> lld1 = new LinkedListDeque<String>();
+        LinkedListDeque<Double> lld2 = new LinkedListDeque<Double>();
         LinkedListDeque<Boolean> lld3 = new LinkedListDeque<Boolean>();
 
         lld1.addFirst("string");

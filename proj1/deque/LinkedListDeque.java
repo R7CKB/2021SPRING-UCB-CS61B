@@ -9,7 +9,7 @@ package deque;
  * @param <T> the type of elements stored in the deque.
  */
 public class LinkedListDeque<T> {
-    public class Node {
+    private class Node {
         private T item;
         private Node prev;
         private Node next;
@@ -151,7 +151,7 @@ public class LinkedListDeque<T> {
      * @param index   the index of the item to return.
      * @return the item at the specified index.
      */
-    public T helperGetRecursive(Node current, int index) {
+    private T helperGetRecursive(Node current, int index) {
         if (index == 0) {
             return current.item;
         }
