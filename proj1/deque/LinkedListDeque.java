@@ -175,12 +175,12 @@ public class LinkedListDeque<T> {
 
 
 //    public boolean equals(Object o) {
-//        if (o instanceof LinkListDeque){
+//        if (o instanceof LinkedListDeque){
 //
 //        }
 //    }
-
-
+//
+//
 //    public Iterator<T> iterator() {
 //        return null;
 //    }

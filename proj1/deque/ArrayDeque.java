@@ -4,6 +4,8 @@ package deque;
  * @date 2024/3/14
  */
 
+import java.util.Iterator;
+
 /**
  * An array-based implementation of a deque.
  *
@@ -14,14 +16,15 @@ public class ArrayDeque<T> {
     private int size;
     private int nextFirst;
     private int nextLast;
+    private static final int DEFAULT_CAPACITY = 8;
+    private static final double DEFAULT_UTILIZATION = 0.25;
 
     /**
      * Initializes an empty deque.
      */
     public ArrayDeque() {
-        int initialSize = 8;
-        items = (T[]) new Object[initialSize];
-        nextFirst = initialSize - 1;
+        items = (T[]) new Object[DEFAULT_CAPACITY];
+        nextFirst = DEFAULT_CAPACITY - 1;
         nextLast = 0;
         size = 0;
     }
@@ -36,7 +39,7 @@ public class ArrayDeque<T> {
         int newNextFirst = capacity - (size - nextFirst);
         int startIndex = newNextFirst + 1;
         System.arraycopy(items, 0, newItems, 0, nextLast); // copy the last items
-        System.arraycopy(items, nextLast, newItems, startIndex, items.length - nextLast);
+        System.arraycopy(items, nextLast, newItems, startIndex, items.length - nextLast);// copy the first items
         nextFirst = newNextFirst;
         items = newItems;
     }
@@ -102,8 +105,7 @@ public class ArrayDeque<T> {
      * Checks if the utilization of the array is less than 25% and resizes the array if necessary.
      */
     private void checkUtilization() {
-        double utilization = 0.25;
-        while (size < items.length * utilization) {
+        while (size < items.length * DEFAULT_UTILIZATION) {
             resize(items.length / 2);
         }
     }
@@ -166,9 +168,9 @@ public class ArrayDeque<T> {
 //
 //        }
 //    }
-
-
-    //    public Iterator<T> iterator() {
+//
+//
+//        public Iterator<T> iterator() {
 //        return null;
 //    }
 }
