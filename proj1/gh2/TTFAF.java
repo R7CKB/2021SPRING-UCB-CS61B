@@ -19,13 +19,21 @@ public class TTFAF {
             source = new GZIPInputStream(source);
             GuitarPlayer player = new GuitarPlayer(source);
             player.play();
+
         } catch (IOException e) {
             e.printStackTrace();
         }
+//         You can also do this:
+//         GuitarPlayer player = new GuitarPlayer(new java.io.File("E://Study Data//CS61B//proj1//gh2//
+//         Super_Mario_Bros._Theme.mid"));
+//         player.play();
+//         GuitarPlayer player = new GuitarPlayer(new java.io.File("E://Study Data//CS61B//proj1//gh2//
+//         Coldplay_-_Viva_La_Vida.mid"));
+//         player.play();
+//         GuitarPlayer player = new GuitarPlayer(new java.io.File("E://Study Data//CS61B//proj1//gh2//
+//         Beethoven-Moonlight-Sonata.mid"));
+//         player.play();
 
-        // You can also do this:
-        // GuitarPlayer player = new GuitarPlayer(new java.io.File("path/to/music.mid"));
-        // player.play();
     }
 
     private static final String TTFAF =

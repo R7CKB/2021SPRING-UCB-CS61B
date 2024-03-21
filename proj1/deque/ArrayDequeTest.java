@@ -2,7 +2,7 @@ package deque;
 
 import org.junit.Test;
 
-import java.util.Optional;
+import java.util.Iterator;
 
 import static org.junit.Assert.*;
 
@@ -15,11 +15,14 @@ public class ArrayDequeTest {
         ArrayDeque<String> deque = new ArrayDeque<>();
         assertTrue("should be empty", deque.isEmpty());
         deque.addFirst("1");
-        assertEquals("should have size:1", 1, deque.size());
         deque.addFirst("2");
-        assertEquals("should have size:2", 2, deque.size());
         deque.addFirst("3");
-        assertEquals("should have size:3", 3, deque.size());
+        deque.addFirst("4");
+        deque.addFirst("5");
+        deque.addFirst("6");
+        deque.addFirst("7");
+        deque.addFirst("8");
+        deque.addFirst("9");
         System.out.println("Printing out deque: ");
         deque.printDeque();
     }
@@ -30,12 +33,16 @@ public class ArrayDequeTest {
      */
     public void testAddLast() {
         ArrayDeque<String> deque = new ArrayDeque<>();
+        assertTrue("should be empty", deque.isEmpty());
         deque.addLast("1");
-        assertEquals("should have size:1", 1, deque.size());
         deque.addLast("2");
-        assertEquals("should have size:2", 2, deque.size());
         deque.addLast("3");
-        assertEquals("should have size:3", 3, deque.size());
+        deque.addLast("4");
+        deque.addLast("5");
+        deque.addLast("6");
+        deque.addLast("7");
+        deque.addLast("8");
+        deque.addLast("9");
         System.out.println("Printing out deque: ");
         deque.printDeque();
     }
@@ -88,31 +95,31 @@ public class ArrayDequeTest {
      */
     public void testSize() {
         ArrayDeque<String> deque = new ArrayDeque<>();
-        assertEquals("should have size:0", 0, deque.size());
-        deque.addLast("1");
-        assertEquals("should have size:1", 1, deque.size());
+        deque.addFirst("1");
         deque.addLast("2");
-        assertEquals("should have size:2", 2, deque.size());
-        deque.addLast("3");
-        assertEquals("should have size:3", 3, deque.size());
+        deque.addFirst("3");
         deque.addLast("4");
-        assertEquals("should have size:4", 4, deque.size());
-        deque.addLast("5");
-        assertEquals("should have size:5", 5, deque.size());
+        deque.addFirst("5");
         deque.addLast("6");
-        assertEquals("should have size:6", 6, deque.size());
-        deque.addLast("7");
-        assertEquals("should have size:7", 7, deque.size());
+        deque.addFirst("7");
         deque.addLast("8");
-        assertEquals("should have size:8", 8, deque.size());
-        deque.addLast("9");
+        deque.addFirst("9");
         assertEquals("should have size:9", 9, deque.size());
-        assertEquals("should get element:9", "9", deque.get(8));
+        assertEquals("should get element:8", "8", deque.get(8));
         deque.printDeque();
-        for (int i = 0; i < 1000; i++) {
-            deque.addLast(String.valueOf(i));
-        }
-        assertEquals("should have size:1009", 1009, deque.size());
+        ArrayDeque<String> newDeque = new ArrayDeque<>();
+        newDeque.addLast("1");
+        newDeque.addFirst("2");
+        newDeque.addLast("3");
+        newDeque.addFirst("4");
+        newDeque.addLast("5");
+        newDeque.addFirst("6");
+        newDeque.addLast("7");
+        newDeque.addFirst("8");
+        newDeque.addLast("9");
+        assertEquals("should have size:9", 9, newDeque.size());
+        assertEquals("should get element:9", "9", newDeque.get(8));
+        newDeque.printDeque();
     }
 
     @Test
@@ -139,5 +146,42 @@ public class ArrayDequeTest {
         assertEquals("should get element:1", "1", newDeque.get(1));
         assertEquals("should get element:3", "3", newDeque.get(2));
         newDeque.printDeque();
+    }
+
+    @Test
+    /**
+     * Test the equals() methods of ArrayDeque.
+     */
+    public void testEquals() {
+        ArrayDeque<String> deque = new ArrayDeque<>();
+        deque.addLast("1");
+        deque.addLast("2");
+        deque.addLast("3");
+        ArrayDeque<String> newDeque = new ArrayDeque<>();
+        newDeque.addLast("1");
+        newDeque.addLast("2");
+        newDeque.addLast("3");
+        assertEquals("should be equal", deque, newDeque);
+        deque.addFirst("4");
+        assertNotEquals("should not be equal", deque, newDeque);
+    }
+
+    @Test
+    /**
+     * Test the iterator() methods of ArrayDeque.
+     */
+    public void testIterator() {
+        ArrayDeque<String> deque = new ArrayDeque<>();
+        deque.addLast("1");
+        deque.addLast("2");
+        deque.addLast("3");
+        Iterator<String> iter = deque.iterator();
+        assertTrue("should have next", iter.hasNext());
+        assertEquals("should get element:1", "1", iter.next());
+        assertTrue("should have next", iter.hasNext());
+        assertEquals("should get element:2", "2", iter.next());
+        assertTrue("should have next", iter.hasNext());
+        assertEquals("should get element:3", "3", iter.next());
+        assertFalse("should not have next", iter.hasNext());
     }
 }

@@ -91,6 +91,44 @@ public class LinkedListDequeTest {
     }
 
     @Test
+    /** Tests the equality and inequality operators. */
+    public void testEqual() {
+        LinkedListDeque<String> deque1 = new LinkedListDeque<>();
+        deque1.addLast("item1");
+        deque1.addLast("item2");
+        deque1.addLast("item3");
+
+        LinkedListDeque<String> deque2 = new LinkedListDeque<>();
+        deque2.addLast("item1");
+        deque2.addLast("item2");
+        deque2.addLast("item3");
+
+        LinkedListDeque<String> deque3 = new LinkedListDeque<>();
+        deque3.addLast("item1");
+        deque3.addLast("item2");
+        deque3.addLast("item4");
+
+        assertEquals(deque1, deque2);
+        assertNotEquals(deque1, deque3);
+    }
+
+    @Test
+    /** Tests the iterator. */
+    public void testIterator() {
+        LinkedListDeque<String> deque = new LinkedListDeque<>();
+        deque.addLast("item1");
+        deque.addLast("item2");
+        deque.addLast("item3");
+
+        int count = 0;
+        for (String item : deque) {
+            count++;
+            System.out.println(item);
+        }
+        assertEquals(3, count);
+    }
+
+    @Test
     /** Adds an item, then removes an item, and ensures that dll is empty afterwards. */
     public void addRemoveTest() {
 

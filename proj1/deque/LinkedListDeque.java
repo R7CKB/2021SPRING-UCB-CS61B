@@ -3,12 +3,14 @@ package deque;
   @author R7CKB
  */
 
+import java.util.Iterator;
+
 /**
  * A deque implementation using a doubly linked list.
  *
  * @param <T> the type of elements stored in the deque.
  */
-public class LinkedListDeque<T> {
+public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
     private class Node {
         private T item;
         private Node prev;
@@ -48,6 +50,7 @@ public class LinkedListDeque<T> {
      *
      * @param item the item to add to the front of the deque.
      */
+    @Override
     public void addFirst(T item) {
         sentinel.next = new Node(item, sentinel, sentinel.next);
         sentinel.next.next.prev = sentinel.next;
@@ -59,6 +62,7 @@ public class LinkedListDeque<T> {
      *
      * @param item the item to add to the end of the deque.
      */
+    @Override
     public void addLast(T item) {
         sentinel.prev = new Node(item, sentinel.prev, sentinel);
         sentinel.prev.prev.next = sentinel.prev;
@@ -66,19 +70,11 @@ public class LinkedListDeque<T> {
     }
 
     /**
-     * Return true if the deque is empty, false otherwise.
-     *
-     * @return true if the deque is empty, false otherwise.
-     */
-    public boolean isEmpty() {
-        return size == 0;
-    }
-
-    /**
      * Return the number of elements in the deque.
      *
      * @return the number of elements in the deque.
      */
+    @Override
     public int size() {
         return size;
     }
@@ -86,6 +82,7 @@ public class LinkedListDeque<T> {
     /**
      * Print the contents of the deque.
      */
+    @Override
     public void printDeque() {
         Node current = sentinel.next;
         while (current != sentinel) {
@@ -100,6 +97,7 @@ public class LinkedListDeque<T> {
      *
      * @return the item at the front of the deque.
      */
+    @Override
     public T removeFirst() {
         if (isEmpty()) {
             return null;
@@ -116,6 +114,7 @@ public class LinkedListDeque<T> {
      *
      * @return the item at the end of the deque.
      */
+    @Override
     public T removeLast() {
         if (isEmpty()) {
             return null;
@@ -133,6 +132,7 @@ public class LinkedListDeque<T> {
      * @param index the index of the item to return.
      * @return the item at the specified index.
      */
+    @Override
     public T get(int index) {
         if (isEmpty() || index < 0 || index >= size) {
             return null;
@@ -173,16 +173,65 @@ public class LinkedListDeque<T> {
         return helperGetRecursive(sentinel.next.next, index - 1);
     }
 
+    /**
+     * Override the equals method to compare two deques.
+     *
+     * @param o the object to compare.
+     * @return true if the two deques are equal, false otherwise.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o instanceof LinkedListDeque) {
+            LinkedListDeque<T> other = (LinkedListDeque<T>) o;
+            if (size != other.size) {
+                return false;
+            }
+            for (int i = 0; i < size; i++) {
+                if (!(this.get(i).equals(other.get(i)))) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
 
-//    public boolean equals(Object o) {
-//        if (o instanceof LinkedListDeque){
-//
-//        }
-//    }
-//
-//
-//    public Iterator<T> iterator() {
-//        return null;
-//    }
+    /**
+     * A private class to implement the iterator for the deque.
+     */
+    private class LinkedListDequeIterator implements Iterator<T> {
+        private Node current;
+
+        public LinkedListDequeIterator() {
+            current = sentinel.next;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return current != sentinel;
+        }
+
+        @Override
+        public T next() {
+            if (!hasNext()) {
+                throw new java.util.NoSuchElementException();
+            }
+            T item = current.item;
+            current = current.next;
+            return item;
+        }
+    }
+
+    /**
+     * Return an iterator over the elements in the deque.
+     *
+     * @return an iterator over the elements in the deque.
+     */
+    public Iterator<T> iterator() {
+        return new LinkedListDequeIterator();
+    }
 
 }
