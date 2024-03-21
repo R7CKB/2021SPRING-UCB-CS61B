@@ -44,9 +44,13 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
         } else if (nextLast - nextFirst == 1) {
             int newNextFirst = capacity - (size - nextFirst);
             int startIndex = newNextFirst + 1;
-            System.arraycopy(items, 0, newItems, 0, nextFirst + 1); // copy the last items
-            System.arraycopy(items, nextLast, newItems, startIndex, items.length - nextLast); // copy the first items
+            System.arraycopy(items, 0, newItems, 0, nextFirst + 1);
+            System.arraycopy(items, nextLast, newItems, startIndex, items.length - nextLast);
             nextFirst = newNextFirst;
+        } else { // Reduce the length of the array
+            System.arraycopy(items, nextFirst + 1, newItems, 0, size);
+            nextFirst = newItems.length - 1;
+            nextLast = size;
         }
         items = newItems;
     }
@@ -180,13 +184,13 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
         if (this == o) {
             return true;
         }
-        if (o instanceof ArrayDeque) {
-            ArrayDeque<T> other = (ArrayDeque<T>) o;
-            if (size != other.size) {
+        if (o instanceof Deque) {
+            Deque<T> other = (Deque<T>) o;
+            if (size != other.size()) {
                 return false;
             }
             for (int i = 0; i < size; i += 1) {
-                if (!((items[i].equals(other.items[i])))) {
+                if (!((get(i).equals(other.get(i))))) {
                     return false;
                 }
             }
@@ -199,10 +203,10 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
      * A private class to implement the iterator for the deque.
      */
     private class ArrayDequeIterator implements Iterator<T> {
-        private int index;
+        private int index = 0;
 
 
-        public ArrayDequeIterator() {
+        ArrayDequeIterator() {
             index = 0;
         }
 

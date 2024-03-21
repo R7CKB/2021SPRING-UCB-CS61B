@@ -5,7 +5,7 @@ import edu.princeton.cs.algs4.StdDraw;
 
 public class GuitarHero {
     private static final int NUM_STRINGS = 37;
-    private static final double BASE_FREQUENCY = 440.0;
+    private static final double FREQUENCY = 440.0;
     private static final double OFFSET = 24.0;
     private static final double DIVIDED = 12.0;
 
@@ -14,7 +14,7 @@ public class GuitarHero {
         GuitarString[] concertArray = new GuitarString[NUM_STRINGS];
 
         for (int i = 0; i < NUM_STRINGS; i += 1) {
-            concertArray[i] = new GuitarString(BASE_FREQUENCY * Math.pow(2, (i - OFFSET) / DIVIDED));
+            concertArray[i] = new GuitarString(FREQUENCY * Math.pow(2, (i - OFFSET) / DIVIDED));
         }
         String keyboard = "q2we4r5ty7u8i9op-[=zxdcfvgbnjmk,.;/' ";
         while (true) {

@@ -23,7 +23,7 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
          * @param prev the previous node in the deque.
          * @param next the next node in the deque.
          */
-        public Node(T item, Node prev, Node next) {
+        Node(T item, Node prev, Node next) {
             this.item = item;
             this.prev = prev;
             this.next = next;
@@ -38,10 +38,10 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
      * Construct an empty linked list deque (only with sentinel node).
      */
     public LinkedListDeque() {
-        Node sentinel = new Node(null, null, null);
-        sentinel.prev = sentinel;
-        sentinel.next = sentinel;
-        this.sentinel = sentinel;
+        Node loyalSentinel = new Node(null, null, null);
+        loyalSentinel.prev = loyalSentinel;
+        loyalSentinel.next = loyalSentinel;
+        this.sentinel = loyalSentinel;
         size = 0;
     }
 
@@ -145,7 +145,7 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
     }
 
     /**
-     * As the getRecursive method is a recursive function, we need to define a helper function to call it recursively.
+     * The recursive helper method to return the item.
      *
      * @param current the current node to start from.
      * @param index   the index of the item to return.
@@ -184,13 +184,14 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
         if (this == o) {
             return true;
         }
-        if (o instanceof LinkedListDeque) {
-            LinkedListDeque<T> other = (LinkedListDeque<T>) o;
-            if (size != other.size) {
+        if (o instanceof Deque) {
+            Deque<T> other = (Deque<T>) o;
+            if (size != other.size()) {
                 return false;
             }
-            for (int i = 0; i < size; i++) {
-                if (!(this.get(i).equals(other.get(i)))) {
+            // get method may be not equal, so we need to compare each element.
+            for (int i = 0; i < size; i += 1) {
+                if (!(get(i).equals(other.get(i)))) {
                     return false;
                 }
             }
@@ -205,7 +206,7 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
     private class LinkedListDequeIterator implements Iterator<T> {
         private Node current;
 
-        public LinkedListDequeIterator() {
+        LinkedListDequeIterator() {
             current = sentinel.next;
         }
 

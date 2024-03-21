@@ -124,6 +124,22 @@ public class ArrayDequeTest {
 
     @Test
     /**
+     * Test the resize() methods of ArrayDeque.
+     */
+    public void testResize() {
+        ArrayDeque<String> deque = new ArrayDeque<>();
+        for (int i = 0; i < 100; i++) {
+            deque.addLast(String.valueOf(i));
+        }
+        for (int i = 0; i < 80; i++) {
+            deque.removeFirst();
+        }
+        assertEquals("should have size:20", 20, deque.size());
+        assertEquals("should get element:99", "99", deque.get(19));
+    }
+
+    @Test
+    /**
      * Test the get() methods of ArrayDeque.
      */
     public void testGet() {
