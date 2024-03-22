@@ -34,7 +34,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
      * Resizes the array to the given capacity.
      *
      * @param capacity the new capacity of the array.
-     * @source <a href="https://github.com/ZonePG/CS61B/blob/main/proj1/deque/ArrayDeque.java">...</a>
+     * @source "https://github.com/ZonePG/CS61B/blob/main/proj1/deque/ArrayDeque.java"
      */
     private void resize(int capacity) {
         T[] newItems = (T[]) new Object[capacity];
