@@ -34,25 +34,22 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
      * Resizes the array to the given capacity.
      *
      * @param capacity the new capacity of the array.
+     * @source <a href="https://github.com/ZonePG/CS61B/blob/main/proj1/deque/ArrayDeque.java">...</a>
      */
     private void resize(int capacity) {
         T[] newItems = (T[]) new Object[capacity];
-        if (nextLast == 0 || nextFirst == 7) {
-            System.arraycopy(items, 0, newItems, 0, items.length);
-            nextFirst = capacity - 1;
-            nextLast = capacity / 2;
-        } else if (nextLast - nextFirst == 1) {
-            int newNextFirst = capacity - (size - nextFirst);
-            int startIndex = newNextFirst + 1;
-            System.arraycopy(items, 0, newItems, 0, nextFirst + 1);
-            System.arraycopy(items, nextLast, newItems, startIndex, items.length - nextLast);
-            nextFirst = newNextFirst;
-        } else { // Reduce the length of the array
-            System.arraycopy(items, nextFirst + 1, newItems, 0, size);
-            nextFirst = newItems.length - 1;
-            nextLast = size;
+        int first = (nextFirst + 1) % items.length;
+        int last = (nextLast + items.length - 1) % items.length;
+        // exchange the nextFirst and nextLast, first equals to nextLast, last equals to nextFirst
+        if (first < last) { // only addLast/removeLast
+            System.arraycopy(items, first, newItems, 0, size);
+        } else { // addFirst/removeFirst
+            System.arraycopy(items, first, newItems, 0, items.length - first);
+            System.arraycopy(items, 0, newItems, items.length - first, last + 1);
         }
         items = newItems;
+        nextFirst = items.length - 1;
+        nextLast = size;
     }
 
     /**
@@ -67,7 +64,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
         }
         items[nextFirst] = t;
         size += 1;
-        nextFirst = (nextFirst - 1 + items.length) % items.length;
+        nextFirst = (nextFirst + items.length - 1) % items.length;
     }
 
     /**
@@ -112,7 +109,8 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
      * Checks if the utilization of the array is less than 25% and resizes the array if necessary.
      */
     private void checkUtilization() {
-        while (size < items.length * DEFAULT_UTILIZATION) {
+        double utilization = (double) size / items.length;
+        if (utilization < DEFAULT_UTILIZATION) {
             resize(items.length / 2);
         }
     }
@@ -146,10 +144,11 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     public T removeLast() {
         if (isEmpty()) {
             return null;
-        } else if (items.length >= MIN_USAGE_LENGTH) {
+        }
+        if (items.length >= MIN_USAGE_LENGTH) {
             checkUtilization();
         }
-        nextLast = (nextLast - 1 + items.length) % items.length;
+        nextLast = (nextLast + items.length - 1) % items.length;
         T last = items[nextLast];
         items[nextLast] = null;
         size -= 1;
@@ -166,8 +165,6 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     public T get(int index) {
         if (index < 0 || index >= size) {
             return null;
-        } else if (nextFirst == items.length - 1) {
-            return items[index];
         } else {
             return items[(nextFirst + index + 1) % items.length];
         }

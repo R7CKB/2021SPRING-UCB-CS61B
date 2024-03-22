@@ -7,6 +7,11 @@ import java.util.Iterator;
 import static org.junit.Assert.*;
 
 public class ArrayDequeTest {
+
+    public static int MAX_SIZE = 100;
+    public static int TEMP_SIZE = 80;
+    public static int END_SIZE = 20;
+
     @Test
     /**
      * Test the addFirst() methods of ArrayDeque.
@@ -128,14 +133,64 @@ public class ArrayDequeTest {
      */
     public void testResize() {
         ArrayDeque<String> deque = new ArrayDeque<>();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < MAX_SIZE; i++) {
             deque.addLast(String.valueOf(i));
         }
-        for (int i = 0; i < 80; i++) {
+        for (int i = 0; i < TEMP_SIZE; i++) {
+            deque.removeLast();
+        }
+        assertEquals("should have size:20", END_SIZE, deque.size());
+        assertEquals("should get element:19", "19", deque.get(END_SIZE - 1));
+        for (int i = 0; i < END_SIZE; i++) {
+            deque.removeLast();
+        }
+        assertEquals("should have size:0", 0, deque.size());
+        assertNull("should get element:null", deque.get(0));
+
+
+        for (int i = 0; i < MAX_SIZE; i++) {
+            deque.addFirst(String.valueOf(i));
+        }
+        for (int i = 0; i < TEMP_SIZE; i++) {
             deque.removeFirst();
         }
-        assertEquals("should have size:20", 20, deque.size());
-        assertEquals("should get element:99", "99", deque.get(19));
+        assertEquals("should have size:20", END_SIZE, deque.size());
+        assertEquals("should get element:0", "0", deque.get(END_SIZE - 1));
+        for (int i = 0; i < END_SIZE; i++) {
+            deque.removeFirst();
+        }
+        assertEquals("should have size:0", 0, deque.size());
+        assertNull("should get element:null", deque.get(0));
+
+
+        for (int i = 0; i < MAX_SIZE; i++) {
+            deque.addLast(String.valueOf(i));
+        }
+        for (int i = 0; i < TEMP_SIZE; i++) {
+            deque.removeFirst();
+        }
+        assertEquals("should have size:20", END_SIZE, deque.size());
+        assertEquals("should get element:99", "99", deque.get(END_SIZE - 1));
+        for (int i = 0; i < END_SIZE; i++) {
+            deque.removeLast();
+        }
+        assertEquals("should have size:0", 0, deque.size());
+        assertNull("should get element:null", deque.get(0));
+
+
+        for (int i = 0; i < MAX_SIZE; i++) {
+            deque.addFirst(String.valueOf(i));
+        }
+        for (int i = 0; i < TEMP_SIZE; i++) {
+            deque.removeLast();
+        }
+        assertEquals("should have size:20", END_SIZE, deque.size());
+        assertEquals("should get element:80", "80", deque.get(END_SIZE - 1));
+        for (int i = 0; i < END_SIZE; i++) {
+            deque.removeFirst();
+        }
+        assertEquals("should have size:0", 0, deque.size());
+        assertNull("should get element:null", deque.get(0));
     }
 
     @Test
