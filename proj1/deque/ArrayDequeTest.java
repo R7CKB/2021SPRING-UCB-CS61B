@@ -8,9 +8,9 @@ import static org.junit.Assert.*;
 
 public class ArrayDequeTest {
 
-    public static int MAX_SIZE = 100;
-    public static int TEMP_SIZE = 80;
-    public static int END_SIZE = 20;
+    private static int MAX_SIZE = 100;
+    private static int TEMP_SIZE = 80;
+    private static int END_SIZE = 20;
 
     @Test
     /**
