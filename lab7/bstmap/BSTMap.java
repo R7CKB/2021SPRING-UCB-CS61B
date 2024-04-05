@@ -13,7 +13,7 @@ import java.util.Set;
  * @param <V> the type of values in this map
  */
 public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
-    private class BSTNode<K extends Comparable<K>, V> {
+    private static class BSTNode<K extends Comparable<K>, V> {
         K key;
         V value;
         BSTNode left, right;
@@ -57,7 +57,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
     }
 
     private BSTNode root;
-    int size;
+    private int size;
 
     /**
      * Removes all the mappings from this map.
@@ -165,7 +165,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
     }
 
     @Override
-    public Iterator iterator() {
+    public Iterator<K> iterator() {
         throw new UnsupportedOperationException("iterator() is not supported in BSTMap");
     }
 
