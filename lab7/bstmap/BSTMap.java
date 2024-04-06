@@ -3,8 +3,7 @@ package bstmap;
  * @author R7CKB
  */
 
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A simple implementation of a binary search tree-based map.
@@ -13,7 +12,7 @@ import java.util.Set;
  * @param <V> the type of values in this map
  */
 public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
-    private static class BSTNode<K extends Comparable<K>, V> {
+    private class BSTNode {
         K key;
         V value;
         BSTNode left, right;
@@ -32,7 +31,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
          * @param key the key to search for
          * @return the node with the given key, or null if not found
          */
-        public BSTNode<K, V> find(BSTNode<K, V> T, K key) {
+        public BSTNode find(BSTNode T, K key) {
             if (T == null) return null;
             if (key.equals(T.key)) return T;
             else if (key.compareTo(T.key) < 0) return find(T.left, key);
@@ -48,8 +47,8 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
          * @param value the value of the new node
          * @return the root of the updated tree
          */
-        public BSTNode<K, V> insert(BSTNode<K, V> T, K key, V value) {
-            if (T == null) return new BSTNode<K, V>(key, value);
+        public BSTNode insert(BSTNode T, K key, V value) {
+            if (T == null) return new BSTNode(key, value);
             if (key.compareTo(T.key) < 0) T.left = insert(T.left, key, value);
             else if (key.compareTo(T.key) > 0) T.right = insert(T.right, key, value);
             return T;
@@ -84,7 +83,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
     @Override
     public V get(K key) {
         if (root == null) return null;
-        BSTNode<K, V> T = root.find(root, key);
+        BSTNode T = root.find(root, key);
         if (T == null) {
             return null;
         }
@@ -102,9 +101,9 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
     /**
      * Helper method to insert a new key-value pair into the tree rooted at T.
      */
-    private void put(K key, V value, BSTNode<K, V> T) {
+    private void put(K key, V value, BSTNode T) {
         size += 1;
-        BSTNode<K, V> Node = T.insert(root, key, value);
+        BSTNode Node = T.insert(root, key, value);
     }
 
     /**
@@ -113,14 +112,14 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
     @Override
     public void put(K key, V value) {
         if (root != null) {
-            BSTNode<K, V> T = root.find(root, key);
+            BSTNode T = root.find(root, key);
             if (T == null) {
                 put(key, value, root);
             } else {
                 T.value = value;
             }
         } else {
-            root = new BSTNode<K, V>(key, value);
+            root = new BSTNode(key, value);
             size += 1;
         }
     }
@@ -129,15 +128,11 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
      * Helper method to print out the BSTMap in order of increasing Key
      * use mutual recursion to traverse the left subtree and then the right subtree
      */
-    private void printInOrder(BSTNode<K, V> T) {
-        BSTNode left = T.left;
-        BSTNode right = T.right;
-        while (left != null) {
-            printInOrder(left);
-        }
-        System.out.println(T.key);
-        while (right != null) {
-            printInOrder(right);
+    private void printInOrder(BSTNode T) {
+        if (T != null) {
+            printInOrder(T.left);
+            System.out.println(T.key);
+            printInOrder(T.right);
         }
     }
 
@@ -149,24 +144,132 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         printInOrder(root);
     }
 
+    /**
+     * Helper function to help KeySet, as the same as printInOrder().
+     */
+    private Set<K> keySet(BSTNode T, Set<K> set) {
+        if (T != null) {
+            keySet(T.left, set);
+            set.add(T.key);
+            keySet(T.right, set);
+        }
+        return set;
+    }
+
+    /**
+     * Return a Set view of the keys contained in this map.
+     *
+     * @return a Set view of the keys contained in this map.
+     */
     @Override
     public Set<K> keySet() {
-        throw new UnsupportedOperationException("keySet() is not supported in BSTMap");
+        Set<K> set = new HashSet<>();
+        return keySet(root, set);
     }
 
+    /**
+     * The other remove method which takes a key and a value as input.
+     *
+     * @param key the key to search for
+     * @return the value associated with the key, or null if the key isn't found
+     */
     @Override
     public V remove(K key, V value) {
-        throw new UnsupportedOperationException("remove() is not supported in BSTMap");
+        remove(key);
+        return value;
     }
 
+    /**
+     * Removes the mapping for a key from this map if it's present.
+     *
+     * @param key key for which mapping should be removed
+     * @return the previous value associated with key, or null if there was no mapping for key.
+     */
     @Override
     public V remove(K key) {
-        throw new UnsupportedOperationException("remove() is not supported in BSTMap");
+        BSTNode T = root.find(root, key);
+        if (key == null || !containsKey(key)) return null;
+        root = removeHelper(root, key);
+        size -= 1;
+        return T.value;
     }
 
+    /**
+     * Helper function to remove a key-value pair from the BSTMap.
+     * If the key isn't found, return null.
+     *
+     * @param T   the root of the BSTMap
+     * @param key the key to be removed
+     * @return the value associated with the key, or null if the key isn't found
+     * @source <a href="https://inst.eecs.berkeley.edu//~cs61b/fa14/book2/data-structures.pdf">...</a>
+     */
+    private BSTNode removeHelper(BSTNode T, K key) {
+        if (T == null) return null;
+        if (key.compareTo(T.key) < 0) {
+            T.left = removeHelper(T.left, key);
+        } else if (key.compareTo(T.key) > 0) {
+            T.right = removeHelper(T.right, key);
+            // otherwise, we've found the key
+        } else if (T.left == null) {
+            return T.right;
+
+        } else if (T.right == null) {
+            return T.left;
+        } else {
+            // with two children, swap with smallest in right subtree
+            T.right = swapSmallest(T.right, T);
+        }
+        return T;
+    }
+
+    private BSTNode swapSmallest(BSTNode T, BSTNode R) {
+        // replace with the successor
+        if (T.left == null) {
+            R.key = T.key;
+            R.value = T.value;
+            return T.right;
+        } else {
+            T.left = swapSmallest(T.left, R);
+            return T;
+        }
+    }
+
+
+    /**
+     * An iterator that iterates over the keys of the dictionary.
+     * The iterator starts at the first key in the dictionary and continues until all keys have been visited.
+     *
+     * @source <a href="https://github.com/turing0/CS61B/blob/master/lab7/bstmap/BSTMap.java">...</a>
+     */
+    private class BSTMapSetIterator implements Iterator<K> {
+        private final List<BSTNode> list;
+
+        public BSTMapSetIterator() {
+            list = new ArrayList<>();
+            if (root != null) list.add(root);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return !list.isEmpty();
+        }
+
+        public K next() {
+            BSTNode T = list.remove(0);
+            if (T.left != null) list.add(T.left);
+            if (T.right != null) list.add(T.right);
+            return T.key;
+        }
+    }
+
+    /**
+     * Returns an iterator over the keys in the map.
+     * The iterator starts at the first key in the map and continues until all keys have been visited.
+     *
+     * @return an iterator over the keys in the map.>
+     */
     @Override
     public Iterator<K> iterator() {
-        throw new UnsupportedOperationException("iterator() is not supported in BSTMap");
+        return new BSTMapSetIterator();
     }
-
 }
