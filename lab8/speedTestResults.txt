@@ -1,0 +1,145 @@
+InsertRandomSpeedTest:
+Enter # strings to insert into hashmap.ULLMap: "abcde"
+Please enter a positive integer: 100000
+class hashmap.ULLMap: 10.81 sec
+
+Enter # strings to insert into your hashmap.MyHashMap: "abcde"
+Please enter a positive integer: 100000
+class hashmap.MyHashMap: 0.03 sec
+
+Enter # strings to insert into Java's HashMap: "abcde"
+Please enter a positive integer: 100000
+Java's Built-in HashMap: 0.01 sec
+
+
+Enter # strings to insert into hashmap.ULLMap: "abcde"
+Please enter a positive integer: 500000
+class hashmap.ULLMap: 47.22 sec
+
+Enter # strings to insert into your hashmap.MyHashMap: "abcde"
+Please enter a positive integer: 500000
+class hashmap.MyHashMap: 0.09 sec
+
+Enter # strings to insert into Java's HashMap: "abcde"
+Please enter a positive integer: 500000
+Java's Built-in HashMap: 0.11 sec
+
+
+Enter # strings to insert into hashmap.ULLMap: "abcde"
+Please enter a positive integer: 1000000
+class hashmap.ULLMap: 146.24 sec
+
+Enter # strings to insert into your hashmap.MyHashMap: "abcde"
+Please enter a positive integer: 1000000
+class hashmap.MyHashMap: 0.33 sec
+
+Enter # strings to insert into Java's HashMap: "abcde"
+Please enter a positive integer: 1000000
+Java's Built-in HashMap: 0.11 sec
+
+
+Conclusion:
+The Java's HashMap is the fastest.
+
+
+InsertInOrderSpeedTest:
+Enter # strings to insert into hashmap.ULLMap: "abcde"
+Please enter a positive integer: 100000
+--Stack Overflow -- couldn't add 100000 strings.
+
+Enter # strings to insert into hashmap.MyHashMap: "abcde"
+Please enter a positive integer: 100000
+class hashmap.MyHashMap: 0.09 sec
+
+Enter # strings to insert into Java's HashMap: "abcde"
+Please enter a positive integer: 100000
+Java's Built-in HashMap: 0.07 sec
+
+
+Enter # strings to insert into hashmap.ULLMap: "abcde"
+Please enter a positive integer: 500000
+--Stack Overflow -- couldn't add 500000 strings.
+
+Enter # strings to insert into hashmap.MyHashMap: "abcde"
+Please enter a positive integer: 500000
+class hashmap.MyHashMap: 0.20 sec
+
+Enter # strings to insert into Java's HashMap: "abcde"
+Please enter a positive integer: 500000
+Java's Built-in HashMap: 0.20 sec
+
+
+Enter # strings to insert into hashmap.ULLMap: "abcde"
+Please enter a positive integer: 1000000
+--Stack Overflow -- couldn't add 1000000 strings.
+
+Enter # strings to insert into hashmap.MyHashMap: "abcde"
+Please enter a positive integer: 1000000
+class hashmap.MyHashMap: 1.40 sec
+
+Enter # strings to insert into Java's HashMap: "abcde"
+Please enter a positive integer: 1000000
+Java's Built-in HashMap: 1.27 sec
+
+
+Conclusion:
+The Java's HashMap is the fastest.
+
+
+BucketsSpeedTest:
+Enter # strings to insert into each map: "abcde"
+Please enter a positive integer: 10000
+class hashmap.MyHashMapALBuckets: 0.01 sec
+class hashmap.MyHashMapLLBuckets: 0.01 sec
+class hashmap.MyHashMapTSBuckets: 0.03 sec
+class hashmap.MyHashMapHSBuckets: 0.01 sec
+class hashmap.MyHashMapPQBuckets: 0.01 sec
+
+
+Enter # strings to insert into each map: "abcde"
+Please enter a positive integer: 50000
+class hashmap.MyHashMapALBuckets: 0.04 sec
+class hashmap.MyHashMapLLBuckets: 0.02 sec
+class hashmap.MyHashMapTSBuckets: 0.05 sec
+class hashmap.MyHashMapHSBuckets: 0.06 sec
+class hashmap.MyHashMapPQBuckets: 0.07 sec
+
+
+Enter # strings to insert into each map: "abcde"
+Please enter a positive integer: 100000
+class hashmap.MyHashMapALBuckets: 0.12 sec
+class hashmap.MyHashMapLLBuckets: 0.08 sec
+class hashmap.MyHashMapTSBuckets: 0.10 sec
+class hashmap.MyHashMapHSBuckets: 0.10 sec
+class hashmap.MyHashMapPQBuckets: 0.06 sec
+
+
+Enter # strings to insert into each map: "abcde"
+Please enter a positive integer: 200000
+class hashmap.MyHashMapALBuckets: 0.19 sec
+class hashmap.MyHashMapLLBuckets: 0.19 sec
+class hashmap.MyHashMapTSBuckets: 0.26 sec
+class hashmap.MyHashMapHSBuckets: 0.30 sec
+class hashmap.MyHashMapPQBuckets: 0.21 sec
+
+
+Enter # strings to insert into each map: "abcde"
+Please enter a positive integer: 300000
+class hashmap.MyHashMapALBuckets: 0.28 sec
+class hashmap.MyHashMapLLBuckets: 0.25 sec
+class hashmap.MyHashMapTSBuckets: 0.34 sec
+class hashmap.MyHashMapHSBuckets: 0.38 sec
+class hashmap.MyHashMapPQBuckets: 0.33 sec
+
+
+Enter # strings to insert into each map: "abcde"
+Please enter a positive integer: 400000
+class hashmap.MyHashMapALBuckets: 0.47 sec
+class hashmap.MyHashMapLLBuckets: 0.30 sec
+class hashmap.MyHashMapTSBuckets: 0.71 sec
+class hashmap.MyHashMapHSBuckets: 1.05 sec
+class hashmap.MyHashMapPQBuckets: 0.65 sec
+
+
+Conclusion:
+The class hashmap.MyHashMapLLBuckets is the fastest.
