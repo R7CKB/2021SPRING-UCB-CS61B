@@ -243,10 +243,19 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
      */
     private class BSTMapSetIterator implements Iterator<K> {
         private final List<BSTNode> list;
+        private BSTNode current;
 
         public BSTMapSetIterator() {
             list = new ArrayList<>();
-            if (root != null) list.add(root);
+            current = root;
+            fillList(current);
+        }
+
+        private void fillList(BSTNode T) {
+            if (T == null) return;
+            fillList(T.left);
+            list.add(T);
+            fillList(T.right);
         }
 
         @Override
@@ -255,10 +264,9 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         }
 
         public K next() {
-            BSTNode T = list.remove(0);
-            if (T.left != null) list.add(T.left);
-            if (T.right != null) list.add(T.right);
-            return T.key;
+            if (!hasNext()) throw new NoSuchElementException("No more elements");
+            current = list.remove(0);
+            return current.key;
         }
     }
 
