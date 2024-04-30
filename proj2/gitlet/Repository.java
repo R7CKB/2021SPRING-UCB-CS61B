@@ -88,17 +88,6 @@ public class Repository {
      */
     public static final File BRANCH_FILE = new File(join(BRANCH_DIR), "master");
 
-    /**
-     * The index for staging area.
-     */
-    private static Index index;
-
-    /**
-     * The current commit.
-     */
-    private static Commit currentCommit;
-
-
     /* TODO: fill in the rest of this class. */
 
     /**
@@ -209,25 +198,14 @@ public class Repository {
         Commit currentCommit = readObject(new File(Commit.COMMITS_DIR,
                 readContentsAsString(branchFile)), Commit.class);
         Index index = readObject(INDEX_FILE, Index.class);
-        // Failure case: no files have been staged TODO:including add and removed files?
+        // Failure case: no files have been staged TODO:including add and removed files? YES
         if (index.addIsEmpty() && index.removeIsEmpty()) {
             Utils.message("No changes added to the commit.");
             System.exit(0);
         }
-        // TODO: what about merge?
         ArrayList<String> parents = new ArrayList<>();
         parents.add(currentCommit.getId());
-        Map<String, String> stageBlobs = index.getAddBlobs();
-        Map<String, String> removeBlobs = index.getRemoveBlobs();
-        Map<String, String> commitBlobs = currentCommit.getBlobMap();
-        // A commit will save and start tracking any files that were staged for addition
-        // but weren't tracked by its parent.
-        Map<String, String> newBlobs = handleBlobs(stageBlobs, commitBlobs);
-        // Finally,
-        // files tracked in the current commit may be untracked in the new commit as a result
-        // being staged for removal by the rm command(below).
-        // We need to remove the files in the new commit that are also in the removeBlobs map.
-        Map<String, String> finalBlobs = handleRemoveBlobs(removeBlobs, newBlobs);
+        Map<String, String> finalBlobs = dealWithStageAndCommitBlobs(index, currentCommit);
         // create a new commit object with the current index and message.
         Commit newCommit = new Commit(message, new Date(), parents, finalBlobs);
         // Update the master branch to point to the new commit.
@@ -810,18 +788,26 @@ public class Repository {
             System.exit(0);
         } else {
             // step2: merge the files
-            fileOperation(mutualParentCommit, currentCommit, mergeCommit, branchName);
+            fileOperation(mutualParentCommit, currentCommit, mergeCommit);
             // step3: create a new commit
+            index = readObject(INDEX_FILE, Index.class);
+            Map<String, String> finalBlobs = dealWithStageAndCommitBlobs(index, currentCommit);
             List<String> parents = new ArrayList<>();
             parents.add(currentCommit.getId());
             parents.add(mergeCommit.getId());
-            Map<String, String> newBlobs = handleBlobs(mergeCommit.getBlobMap(), currentCommit.getBlobMap());
             Commit newCommit = new Commit("Merged " + branchName + " into " + currentBranch + ".",
-                    new Date(), parents, newBlobs);
+                    new Date(), parents, finalBlobs);
             // step4: update the HEAD file to point to the new commit.
             writeContents(branchFile, newCommit.getId());
             index.clearFile();
         }
+    }
+
+    private static Map<String, String> dealWithStageAndCommitBlobs(Index index, Commit currentCommit) {
+        Map<String, String> stageBlobs = index.getAddBlobs();
+        Map<String, String> removeBlobs = index.getRemoveBlobs();
+        Map<String, String> newBlobs = handleBlobs(stageBlobs, currentCommit.getBlobMap());
+        return handleRemoveBlobs(removeBlobs, newBlobs);
     }
 
     /**
@@ -830,14 +816,13 @@ public class Repository {
      * @param mutualCommit  the common ancestor commit.
      * @param currentCommit the current commit.
      * @param mergeCommit   the merge commit.
-     * @help from <a href="https://zhuanlan.zhihu.com/p/533852291">...</a> and
-     * <a href="https://www.youtube.com/watch?v=JR3OYCMv9b4&t=929s">...</a> ,which use the ideology of using
-     * a <value(id),key(filename)> map to represent the files in the three commits.
+     *                      &#064;source   from <a href="https://zhuanlan.zhihu.com/p/533852291">...</a> and
+     *                      <a href="https://www.youtube.com/watch?v=JR3OYCMv9b4&t=929s">...</a> ,which use the ideology of using
+     *                      a <value(id),key(filename)> map to represent the files in the three commits.
      */
     private static void fileOperation(Commit mutualCommit,
                                       Commit currentCommit,
-                                      Commit mergeCommit,
-                                      String branchName) {
+                                      Commit mergeCommit) {
         // first: find all the files that are in different branches
         Index index = readObject(INDEX_FILE, Index.class);
         // use new keywords to avoid modifying the original maps
@@ -852,10 +837,10 @@ public class Repository {
         // 2. Modified in current branch but not in merge branch,
         // the result is the current branch's version.
         // 3. Modified in both branches:
-        // 3.1.
-        // The two versions are the same, the result is the same version.
-        // 3.2.
-        // The two versions are different, the result is the conflicted version.
+        //     3.1.
+        //     The two versions are the same, the result is the same version.
+        //     3.2.
+        //     The two versions are different, the result is the conflicted version.
         // 4. Not in split point nor in merge branch, but in current branch,
         // the result is the current branch's version.
         // 5. Not in split point nor in the current branch,
@@ -866,28 +851,31 @@ public class Repository {
         // the result is the current branch's version.(remain removed)
 
         // The only way we distinguish files is by theirs id.
-        // TODO: Why case4 and case5 are considered firstly?
+        // Because the files maybe deleted first,so we need
+        // to check if the files are deleted in the current branch
+        // or the merge branch or in the split point.
+        // the order of the if-else statements matters.
+        // beacause
         for (Map.Entry<String, String> entry : allBlobs.entrySet()) {
-            String id = entry.getKey();
-            String filename = entry.getValue();
-            // first check if the file is present in the current branch or the merge branch.
-            // if it's not, it's a new file, and we don't need to handle it.
+            String filename = entry.getKey();
+            String id = entry.getValue();
+            // Case 4,
+            // the file isn't in the merge branch and not in the split point,
+            // but in the current branch.
+            // The file isn't new for the current branch.
+            // So we do nothing.
             if (!present(mutualCommit, filename, id) && !present(mergeCommit, filename, id)
                     && present(currentCommit, filename, id)) {
-                // Case 4
-                // the file isn't in the merge branch and not in the common ancestor,
-                // but in the current branch.
-                // The file isn't new for the current branch.
-                // Now we're in the case where the file is present in the current branch,
-                // so we do nothing.
                 continue;
             }
+            // Case 5,
+            // the file isn't in the current branch and not in the split point,
+            // but in the merge branch.
+            // The file is new for the current branch.
+            // So we create a new file and add it to the index.
             if (!present(mutualCommit, filename, id) && !present(currentCommit, filename, id)
                     && present(mergeCommit, filename, id)) {
-                // Case 5,
-                // the file isn't in the current branch and not in the common ancestor,
-                // but in the merge branch.
-                // The file is new for the current branch.
+                checkFiles(currentCommit, mergeCommit);
                 Blob blob = Blob.fromFile(id);
                 String content = blob.getContent();
                 File file = new File(CWD, filename);
@@ -900,17 +888,109 @@ public class Repository {
                     System.err.println("Error: Could not create file.");
                 }
             }
-            if (!modified(currentCommit, filename, id) && !present(mergeCommit, filename, id)) {
-                // Case 6
+            // Case 6,
+            // the file is unmodified in the current branch,
+            // but not present in the merge branch.
+            // So we remove it from the CWD and the index.
+            if (present(mutualCommit, filename, id) && !modified(currentCommit, filename, id)
+                    && !present(mergeCommit, filename, id)) {
+
+                checkFiles(currentCommit, mergeCommit);
                 File file = new File(CWD, filename);
-                boolean fileDeleted = file.delete();
+                file.delete();
                 Blob blob = Blob.fromFile(id);
                 index.removeAdd(blob);
                 continue;
             }
-            if (!modified(mergeCommit, filename, id) && !present(currentCommit, filename, id)) {
-                // Case 7
-                // do nothing
+            // Case 7
+            // the file is unmodified in the merge branch,
+            // but not present in the current branch.
+            // So we do nothing.
+            if (present(mutualCommit, filename, id) && !modified(mergeCommit, filename, id)
+                    && !present(currentCommit, filename, id)) {
+                continue;
+            }
+            // all possible cases about case 3 are following:
+            // Case 3.1
+            // (not in the split point, but in both branches, and have the same contents(same id))
+            if (!present(mutualCommit, filename, id) && present(currentCommit, filename, id)
+                    && present(mergeCommit, filename, id)
+                    && currentCommit.getBlobMap().get(filename).equals(mergeCommit.getBlobMap().get(filename))) {
+                try {
+                    Blob blob = Blob.fromFile(id);
+                    String content = blob.getContent();
+                    File file = new File(CWD, filename);
+                    file.createNewFile();
+                    writeContents(file, content);
+                    continue;
+                } catch (Exception e) {
+                    System.err.println("Error: Could not merge file.");
+                }
+            }
+            // Case 3.2
+            // (not in the split point, but in both branches, and have different contents(different id))
+            // The file is modified in both branches,
+            // and the two versions are different.
+            // The result is the conflicted version.
+            // We handle the conflict in the next step.
+            if (!present(mutualCommit, filename, id) && present(currentCommit, filename, id)
+                    && present(mergeCommit, filename, id)
+                    && !currentCommit.getBlobMap().get(filename).equals(mergeCommit.getBlobMap().get(filename))) {
+                message("Encountered a merge conflict.");
+                handleConflicts(currentCommit, mergeCommit, filename);
+                continue;
+            }
+            // Case 3.1
+            // (in the split point, but not in both branches, they are deleted in both branches)
+            // So we do nothing.
+            if (present(mutualCommit, filename, id) && !present(currentCommit, filename, id)
+                    && !present(mergeCommit, filename, id)) {
+                continue;
+            }
+
+            // case 3.1 not changed
+            if (!modified(currentCommit, filename, id) && !modified(mergeCommit, filename, id)) {
+                // They both didn't modify the files
+                // The result is the same version.
+                // Do nothing.
+                continue;
+            }
+            // case 3.1 modified in the same way
+            if (modified(currentCommit, filename, id) && modified(mergeCommit, filename, id)
+                    && currentCommit.getBlobMap().get(filename).equals(mergeCommit.getBlobMap().get(filename))) {
+                // They both modified the file in the same way.
+                // The result is the same version.
+                // Do nothing.
+                continue;
+            }
+            // Case 3.2
+            //  file is in the split point,
+            //  but not present in the current branch and modified in the merge branch.
+            if (present(mutualCommit, filename, id) && !present(currentCommit, filename, id)
+                    && modified(mergeCommit, filename, id)) {
+                // The file is modified in the merge branch,
+                // and deleted in the current branch.
+                // The result is the conflicted version.
+                message("Encountered a merge conflict.");
+                handleConflicts(currentCommit, mergeCommit, filename);
+                continue;
+            }
+            // Case 3.2
+            //  file is in the split point,
+            //  but not present in the merge branch and modified in the current branch.
+            if (present(mutualCommit, filename, id) && !present(mergeCommit, filename, id)
+                    && modified(currentCommit, filename, id)) {
+                message("Encountered a merge conflict.");
+                handleConflicts(currentCommit, mergeCommit, filename);
+                continue;
+            }
+            // Case 3.2
+            //  file is in the split point,
+            //  but modified in both branches in different way.
+            if (present(mutualCommit, filename, id) && modified(currentCommit, filename, id)
+                    && modified(mergeCommit, filename, id)) {
+                message("Encountered a merge conflict.");
+                handleConflicts(currentCommit, mergeCommit, filename);
                 continue;
             }
             // Case 1
@@ -918,70 +998,27 @@ public class Repository {
             // the deletion is handled in case 6.
             // → The merge branch's version.
             if (modified(mergeCommit, filename, id) && !modified(currentCommit, filename, id)) {
+                checkFiles(currentCommit, mergeCommit);
                 String newId = mergeCommit.getBlobMap().get(filename);
                 Blob blob = Blob.fromFile(newId);
                 String content = blob.getContent();
-                writeContents(new File(join(CWD), filename), content);
+                File file = new File(CWD, filename);
+                writeContents(file, content);
                 index.addAdd(blob);
                 continue;
             }
             // Case 2
             // modified in current branch but not in merge branch,
-            // the deletion is handled in case 7.
+            // the deletion case is handled in case 7.
             // → The current branch's version.
             if (modified(currentCommit, filename, id) && !modified(mergeCommit, filename, id)) {
-//                String newId = currentCommit.getBlobMap().get(filename);
-//                Blob blob = Blob.fromFile(newId);
-//                String content = blob.getContent();
-//                writeContents(new File(join(CWD), filename), content);
                 // Do nothing.
                 continue;
             }
-            // Case 3
-            // modified(including deleted) in both branches, There are two cases:
-            if (modified(currentCommit, filename, id) && modified(mergeCommit, filename, id)) {
-                // Case 3.2
-                if (!currentCommit.containsFile(filename) ||
-                        !mergeCommit.containsFile(filename)) {
-                    // they modified the files in different ways → conflicted version.
-                    // one of the versions is deleted, the other isn't
-                    message("Encountered a merge conflict.");
-                    handleConflicts(currentCommit, mergeCommit, filename);
-                    continue;
-                }
-                if (currentCommit.containsFile(filename) && mergeCommit.containsFile(filename)
-                        && !currentCommit.containsId(id) && !mergeCommit.containsId(id)) {
-                    // they modified the files in different ways → conflicted version.
-                    // all the versions are modified, but they have different contents
-                    message("Encountered a merge conflict.");
-                    handleConflicts(currentCommit, mergeCommit, filename);
-                    continue;
-                }
-                // Case 3.1
-                // they both modified the file with the same way(including deleted).
-                if (!currentCommit.containsFile(filename) && !mergeCommit.containsFile(filename)) {
-                    File file = new File(CWD, filename);
-                    boolean fileDeleted = file.delete();
-                    continue;
-                }
-                if (currentCommit.containsFile(filename) && mergeCommit.containsFile(filename)
-                        && !currentCommit.containsId(id) && !mergeCommit.containsId(id)
-                        && currentCommit.getBlobMap().get(filename)
-                        .equals(mergeCommit.getBlobMap().get(filename))) {
-//                    String mutualId = currentCommit.getBlobMap().get(filename);
-//                    Blob mutualBlob = Blob.fromFile(mutualId);
-//                    String content = mutualBlob.getContent();
-//                    writeContents(new File(join(CWD), filename), content);
-                    // they both modified the file with the same way(including deleted)
-                    // and have the same contents.
-                    // The result is the same version.
-                    // Do nothing.
-                }
-            }
         }
-
         index.saveFile();
     }
+
 
     /**
      * As a helper method to check if a commit has modified files.
@@ -994,12 +1031,11 @@ public class Repository {
     }
 
     private static boolean present(Commit commit, String filename, String id) {
-        return commit.containsFile(filename) && commit.containsId(id);
+        return commit.containsId(id) && commit.containsFile(filename);
     }
 
     private static void handleConflicts(Commit currentCommit, Commit mergeCommit,
                                         String filename) {
-        Index index = readObject(INDEX_FILE, Index.class);
         String currentId = currentCommit.getBlobMap().get(filename);
         String mergeId = mergeCommit.getBlobMap().get(filename);
         if (currentId == null) {
@@ -1009,8 +1045,6 @@ public class Repository {
             String content = "<<<<<<< HEAD" + "\n" + "=======\n"
                     + mergeContent + ">>>>>>>" + "\n";
             writeContents(file, content);
-            Blob blob = new Blob("conflict-file", content);
-            index.addAdd(blob);
         } else if (mergeId == null) {
             Blob currentBlob = Blob.fromFile(currentId);
             String currentContent = currentBlob.getContent();
@@ -1018,8 +1052,6 @@ public class Repository {
             String content = "<<<<<<< HEAD" + "\n" + currentContent + "=======\n"
                     + ">>>>>>>" + "\n";
             writeContents(file, content);
-            Blob blob = new Blob("conflict-file", content);
-            index.addAdd(blob);
         } else {
             Blob currentBlob = Blob.fromFile(currentId);
             Blob mergeBlob = Blob.fromFile(mergeId);
@@ -1029,10 +1061,7 @@ public class Repository {
             String content = "<<<<<<< HEAD" + "\n" + currentContent + "=======\n"
                     + mergeContent + ">>>>>>>" + "\n";
             writeContents(file, content);
-            Blob blob = new Blob("conflict-file", content);
-            index.addAdd(blob);
         }
-        index.saveFile();
     }
 
     /**
@@ -1046,33 +1075,23 @@ public class Repository {
     private static Map<String, String> getAllBlobs(Map<String, String> mutualBlobs,
                                                    Map<String, String> currentBlobs,
                                                    Map<String, String> mergeBlobs) {
-        Map<String, String> allBlobs = new HashMap<>();
-        //
-        for (Map.Entry<String, String> entry : mutualBlobs.entrySet()) {
-            allBlobs.put(entry.getValue(), entry.getKey());
-        }
-        for (Map.Entry<String, String> entry : currentBlobs.entrySet()) {
-            allBlobs.put(entry.getValue(), entry.getKey());
-        }
-        for (Map.Entry<String, String> entry : mergeBlobs.entrySet()) {
-            allBlobs.put(entry.getValue(), entry.getKey());
-        }
+        Map<String, String> allBlobs = new HashMap<>(mutualBlobs);
+        allBlobs.putAll(currentBlobs);
+        allBlobs.putAll(mergeBlobs);
         return allBlobs;
     }
 
-    private static void checkFiles() {
+    private static void checkFiles(Commit currentCommit, Commit mergeCommit) {
         // If the merge overwrites or deletes an untracked file in the current commit
         String branch = readContentsAsString(HEAD_FILE);
         List<String> workingFiles = plainFilenamesIn(CWD);
         Index index = readObject(INDEX_FILE, Index.class);
         if (workingFiles != null && !workingFiles.isEmpty()) {
-            for (String workingFile : workingFiles) {
-                Commit currentCommit = readObject(new File(Commit.COMMITS_DIR,
-                        readContentsAsString(new File(CWD, branch))), Commit.class);
-                if (!index.addContainsFile(workingFile) && !index.removeContainsFile(workingFile)
-                        && !currentCommit.containsFile(workingFile)) {
+            for (String filename : workingFiles) {
+                if (mergeCommit.containsFile(filename) && !currentCommit.containsFile(filename)) {
                     // If the file is modified in the current commit,
-                    message("There is an untracked file in the way; delete it, or add and commit it first.");
+                    message("There is an untracked file in the way; delete it, " +
+                            "or add and commit it first.");
                     System.exit(0);
                 }
             }
