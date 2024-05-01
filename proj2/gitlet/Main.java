@@ -110,27 +110,36 @@ public class Main {
             case "add-remote":
                 validateNumArgsAndFormat("add-remote", args, 3);
                 validateGitletDirectory(new File(".gitlet"));
-                // TODO: handle the `add-remote [remote-name] [remote-url]` command
+                String remoteName = args[1];   // the second argument is the remote name
+                String remoteDirectory = args[2];   // the third argument is the remote URL
+                Repository.addRemote(remoteName, remoteDirectory);
                 break;
             case "rm-remote":
-                validateNumArgsAndFormat("rm-remote", args, 3);
+                validateNumArgsAndFormat("rm-remote", args, 2);
                 validateGitletDirectory(new File(".gitlet"));
-                // TODO: handle the `rm-remote [remote-name]` command
+                String remoteNameToRemove = args[1];   // the second argument is the remote name
+                Repository.rmRemote(remoteNameToRemove);
                 break;
             case "push":
                 validateNumArgsAndFormat("push", args, 3);
                 validateGitletDirectory(new File(".gitlet"));
-                //TODO: handle the `push [remote-name] [branch-name]` command
+                String remoteNameToPush = args[1];   // the second argument is the remote name
+                String branchToPush = args[2];   // the third argument is the branch name
+                Repository.push(remoteNameToPush, branchToPush);
                 break;
             case "fetch":
                 validateNumArgsAndFormat("fetch", args, 3);
                 validateGitletDirectory(new File(".gitlet"));
-                //TODO: handle the `fetch [remote-name] [branch-name]` command
+                String remoteNameToFetch = args[1];   // the second argument is the remote name
+                String branchToFetch = args[2];   // the third argument is the branch name
+                Repository.fetch(remoteNameToFetch, branchToFetch);
                 break;
             case "pull":
                 validateNumArgsAndFormat("pull", args, 3);
                 validateGitletDirectory(new File(".gitlet"));
-                //TODO: handle the `pull [remote-name] [branch-name]` command
+                String remoteNameToPull = args[1];   // the second argument is the remote name
+                String branchToPull = args[2];   // the third argument is the branch name
+                Repository.pull(remoteNameToPull, branchToPull);
                 break;
             default:
                 // not precise enough, but it's a start
