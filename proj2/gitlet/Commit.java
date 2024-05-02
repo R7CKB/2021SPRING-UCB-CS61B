@@ -11,19 +11,19 @@ import static gitlet.Utils.*;
 
 /**
  * Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
+ * A Commit object contains the following information *: the message of the commit.
+ * - timeStamp: the date and time of the commit.
+ * - id: the SHA-1 hash of the commit.
+ * - parents: the parent Commits of the commit.
+ * - blobMap: the blobMap of the commit.
+ * The Commit object is responsible for serializing and deserializing itself to and from a file.
+ * It also provides methods for getting and setting its fields,
+ * as well as for saving and loading it to and from a file.
+ * The blobMap is a map that maps the filename to the SHA-1 hash of the corresponding blob.
  *
  * @author R7CKB
  */
 public class Commit implements Serializable, Dumpable {
-/**
- * TODO: add instance variables here.
- *
- * List all instance variables of the Commit class here with a useful
- * comment above them describing what that variable represents and how that
- * variable is used. We've provided one example for `message`.
- */
 
     /**
      * The commits' directory.
@@ -58,7 +58,7 @@ public class Commit implements Serializable, Dumpable {
     /**
      * The blobMap of this Commit.
      */
-    private Map<String, String> blobMap;
+    private final Map<String, String> blobMap;
 
     /**
      * Constructor for an empty Commit object.
@@ -102,28 +102,53 @@ public class Commit implements Serializable, Dumpable {
         return timeStamp;
     }
 
-    public boolean containsId(String id) {
-        if (blobMap.isEmpty()) return false;
-        return blobMap.containsValue(id);
+    /**
+     * Returns true if the commit contains the given id.
+     *
+     * @return true if the commit contains the given id, false otherwise.
+     */
+    public boolean containsId(String fileId) {
+        if (blobMap.isEmpty()) {
+            return false;
+        }
+        return blobMap.containsValue(fileId);
     }
 
+    /**
+     * Returns true if the commit contains the given file.
+     *
+     * @return true if the commit contains the given file, false otherwise.
+     */
     public boolean containsFile(String filename) {
-        if (blobMap.isEmpty()) return false;
+        if (blobMap.isEmpty()) {
+            return false;
+        }
         return blobMap.containsKey(filename);
     }
 
-    public void removeBlob(String filename) {
-        blobMap.remove(filename);
-    }
-
+    /**
+     * Returns the commit ID of this Commit(SHA-1 hash).
+     *
+     * @return the commit ID of this Commit(SHA-1 hash).
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Returns the parent Commits of this Commit.
+     *
+     * @return the parent Commits of this Commit.
+     */
     public List<String> getParents() {
         return parents;
     }
 
+    /**
+     * Returns the blobMap of this Commit.
+     *
+     * @return the blobMap of this Commit.
+     */
     public Map<String, String> getBlobMap() {
         return blobMap;
     }
@@ -139,15 +164,15 @@ public class Commit implements Serializable, Dumpable {
         if (listOfParents.size() == 2) {
             Commit parent1 = fromFile(listOfParents.get(0));
             Commit parent2 = fromFile(listOfParents.get(1));
-            System.out.println("Merge: " + parent1.getId().substring(0, 7) + " " +
-                    parent2.getId().substring(0, 7));
+            System.out.println("Merge: " + parent1.getId().substring(0, 7)
+                    + " " + parent2.getId().substring(0, 7));
         }
         System.out.println("Date: " + this.getTimeStamp());
         System.out.println(this.getMessage());
         System.out.println();
         // the following code is for debugging purposes only.
-//        System.out.println("Parents: " + this.getParents());
-//        System.out.println("BlobMap: " + this.getBlobMap());
+        // System.out.println("Parents: " + this.getParents());
+        // System.out.println("BlobMap: " + this.getBlobMap());
     }
 
 
@@ -187,5 +212,4 @@ public class Commit implements Serializable, Dumpable {
         File commitFile = new File(COMMITS_DIR, getId());
         writeObject(commitFile, this);
     }
-
 }

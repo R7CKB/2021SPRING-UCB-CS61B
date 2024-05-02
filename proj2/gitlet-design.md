@@ -40,4 +40,4 @@ can’t analyze Chinese
 - Keep the fact that you need to be able to load/save things from disk in mind when picking your classes and data
   structures.
 
-you can't 
+All my experience is written in the Gitlet design document, so I don’t have anymore to add here.

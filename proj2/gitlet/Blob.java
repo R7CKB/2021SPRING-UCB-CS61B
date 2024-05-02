@@ -5,7 +5,14 @@ import java.io.Serializable;
 
 import static gitlet.Utils.*;
 
-public class Blob implements Serializable, Dumpable {
+/**
+ * Represents a blob object in Gitlet.
+ * It contains a filename and content, and computes its id as the name of the blob file.
+ *
+ * @author R7CKB
+ */
+public class Blob implements Serializable {
+
     /**
      * The blobs' directory.
      * This directory addContainsId all the trees of the repository.
@@ -13,23 +20,20 @@ public class Blob implements Serializable, Dumpable {
     static final File BLOBS_DIR = join(Repository.OBJECTS_DIR, "blobs");
 
     /**
-     * The blob's filename.
-     * This filename is the SHA-1 hash of the blob's content.
+     * This filename is the file original name.
      */
     private final String filename;
 
     /**
-     * The blob's content.
-     * This content is the actual data of the blob.
+     * This content is the actual data of the file.
      */
     private final String content;
 
     /**
      * The blob's id.
-     * This id is the SHA-1 hash of the blob's content.
+     * This id is the SHA-1 hash of the filename and content.
      */
     private final String id;
-
 
 
     /**
@@ -47,35 +51,59 @@ public class Blob implements Serializable, Dumpable {
         saveBlob();
     }
 
+    /**
+     * Get the filename of the blob.
+     *
+     * @return the filename of the blob.
+     */
     public String getFilename() {
         return filename;
     }
 
+    /**
+     * Get the id of the blob.
+     *
+     * @return the id of the blob.
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Get the content of the blob.
+     *
+     * @return the content of the blob.
+     */
     public String getContent() {
         return content;
     }
 
-
-    @Override
-    public void dump() {
-        Blob blob = fromFile(filename);
-        System.out.println(blob);
-    }
-
-    public static Blob fromFile(String filename) {
+    /**
+     * Get the blob object from the given id.
+     *
+     * @param id the id of the blob.
+     * @return the blob object.
+     */
+    public static Blob fromFile(String id) {
         Blob blob = null;
-        File blobFile = new File(BLOBS_DIR, filename);
+        File blobFile = new File(BLOBS_DIR, id);
         blob = readObject(blobFile, Blob.class);
         return blob;
 
     }
 
+    /**
+     * Save the blob object to the corresponding blob file.
+     */
     public void saveBlob() {
         File blobFile = new File(BLOBS_DIR, id);
         writeObject(blobFile, this);
     }
+
+    // This is only for debugging
+    //    @Override
+    //    public void dump() {
+    //        Blob blob = fromFile(filename);
+    //        System.out.println(blob);
+    //    }
 }

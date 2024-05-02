@@ -12,23 +12,17 @@ import java.util.*;
 
 import static gitlet.Utils.*;
 
-// TODO: any imports you need here
 
 /**
  * Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
+ * This class represents a gitlet repository, which is a version-control system.
+ * This light system is designed to be straightforward to understand and use, and it is
+ * designed to be a good fit for small to medium-sized projects.
+ * It supports basic operations such as commit, branch, merge, and remote.
  *
  * @author R7CKB
  */
 public class Repository {
-    /**
-     * TODO: add instance variables here.
-     *
-     * List all instance variables of the Repository class here with a useful
-     * comment above them describing what that variable represents and how that
-     * variable is used. We've provided two examples for you.
-     */
 
     // the default File structure like the following:
     //.gitlet/
@@ -93,23 +87,18 @@ public class Repository {
     public static final File HEAD_FILE = new File(join(GITLET_DIR), "HEAD");
 
     /**
-     * The index file for staging area.
-     */
-    public static final File INDEX_FILE = new File(join(GITLET_DIR), "index");
-
-    /**
      * The current branch(default is master).
      */
     public static final File BRANCH_FILE = new File(join(BRANCH_DIR), "master");
 
-    /* TODO: fill in the rest of this class. */
+    public static final int SHA1_LENGTH = 40;
 
     /**
      * As a helper method to help initialize the repository.
      */
-    public static void setUpPersistence() {
+    private static void setUpPersistence() {
         boolean gitletDirExists = GITLET_DIR.mkdir(); // create.gitlet directory if it doesn't exist
-        boolean indexFileExists = Index.indexFile.exists(); // check if the index file exists
+        boolean indexFileExists = Index.INDEX_FILE.exists(); // check if the index file exists
         boolean headFileExists = HEAD_FILE.exists(); // check if HEAD file exists
 
         boolean objectsDirExists = OBJECTS_DIR.mkdir(); // create objects directory if it doesn't exist
@@ -120,24 +109,26 @@ public class Repository {
         boolean remoteDIrExists = REMOTE_DIR.mkdirs(); // create refs/remotes/ directory if it doesn't exist
         boolean masterExists = BRANCH_FILE.exists(); // check if the master branch file exists
         if (!gitletDirExists) {
-            Utils.message("A Gitlet version-control system already " +
-                    "exists in the current directory.");
+            Utils.message("A Gitlet version-control system already "
+                    + "exists in the current directory.");
             System.exit(0);
         }
         if (!indexFileExists && !headFileExists && !masterExists && branchDirExists
                 && objectsDirExists && commitsDirExist && blobsDirExist) {
             try {
                 boolean headExists = HEAD_FILE.createNewFile(); // create HEAD file if it doesn't exist
-                boolean indexExists = INDEX_FILE.createNewFile(); // create index file if it doesn't exist
+                boolean indexExists = Index.INDEX_FILE.createNewFile(); // create index file if it doesn't exist
                 boolean materExists = BRANCH_FILE.createNewFile(); // create master branch file
                 // if it doesn't exist
                 // creates an initial commit, and initialize the index,head, and master branch.
                 Commit initalCommit = new Commit();
+                // when you create a new index,it is stored in the index file.
                 Index index = new Index();
                 writeContents(HEAD_FILE, "master");
                 writeContents(BRANCH_FILE, initalCommit.getId());
-            } catch (Exception e) {
-                System.err.println("Error in initializing repository: " + e.getMessage());
+            } catch (IOException e) {
+                System.err.println("Error in initializing repository: "
+                        + e.getMessage());
             }
         }
     }
@@ -145,6 +136,7 @@ public class Repository {
 
     /**
      * Initializes a new repository in the current directory.
+     * Creates a new Gitlet version-control system in the current directory.
      */
     public static void init() {
         // mimic lab6 setupPersistence() method
@@ -153,7 +145,7 @@ public class Repository {
 
 
     /**
-     * Adds a file to the repository's index.
+     * Adds a file to the repository's index (add entry of the index).
      *
      * @param filename the name of the file to add into the index.
      */
@@ -161,7 +153,7 @@ public class Repository {
         String branch = readContentsAsString(HEAD_FILE);
         Commit currentCommit = readObject(new File(Commit.COMMITS_DIR,
                 readContentsAsString(new File(BRANCH_DIR, branch))), Commit.class);
-        Index index = readObject(INDEX_FILE, Index.class);
+        Index index = readObject(Index.INDEX_FILE, Index.class);
         File file = new File(join(CWD), filename);
         //  If the file doesn't exist (neither in the working directory nor in the index)
         if (!file.exists()) {
@@ -203,7 +195,8 @@ public class Repository {
 
 
     /**
-     * make a commit of the current index with the given message on the current branch.
+     * Saves a snapshot of tracked files in the current commit and staging area,
+     * so they can be restored at a later time, creating a new commit
      *
      * @param message the message of the commit.
      */
@@ -212,8 +205,10 @@ public class Repository {
         File branchFile = new File(BRANCH_DIR, branch);
         Commit currentCommit = readObject(new File(Commit.COMMITS_DIR,
                 readContentsAsString(branchFile)), Commit.class);
-        Index index = readObject(INDEX_FILE, Index.class);
-        // Failure case: no files have been staged TODO:including add and removed files? YES
+        Index index = readObject(Index.INDEX_FILE, Index.class);
+        // Failure case: no files have been staged 
+        // including added and removed files?
+        // YES
         if (index.addIsEmpty() && index.removeIsEmpty()) {
             Utils.message("No changes added to the commit.");
             System.exit(0);
@@ -229,28 +224,34 @@ public class Repository {
         index.clearFile();
     }
 
-    private static Map<String, String> handleRemoveBlobs(Map<String, String> stageBlobs,
+    /**
+     * As a helper method to deal with the removed entries of the index and the new commit blobs.
+     *
+     * @param removeStageBlobs the blobs in the index.
+     * @param commitBlobs      the blobs in the current commit.
+     */
+    private static Map<String, String> handleRemoveBlobs(Map<String, String> removeStageBlobs,
                                                          Map<String, String> commitBlobs) {
-        for (String filename : stageBlobs.keySet()) {
+        for (String filename : removeStageBlobs.keySet()) {
             commitBlobs.remove(filename);
         }
         return commitBlobs;
     }
 
     /**
-     * As a helper method to handle the blobs of the current commit and the new commit.
+     * As a helper method to handle the added entries of the index and the new commit blobs.
      *
-     * @param stageBlobs  the blobs in the index.
-     * @param commitBlobs the blobs in the current commit.
+     * @param addStageBlobs the blobs in the added entries of the index.
+     * @param commitBlobs   the blobs in the current commit.
      * @return the new blobs of the new commit.
      */
-    private static Map<String, String> handleBlobs(Map<String, String> stageBlobs,
+    private static Map<String, String> handleBlobs(Map<String, String> addStageBlobs,
                                                    Map<String, String> commitBlobs) {
         // if the current commit is initial commit, return the current blobs(index files).
         if (commitBlobs.isEmpty()) {
-            return stageBlobs;
+            return addStageBlobs;
         } else {
-            for (Map.Entry<String, String> entry : stageBlobs.entrySet()) {
+            for (Map.Entry<String, String> entry : addStageBlobs.entrySet()) {
                 String filename = entry.getKey();
                 String id = entry.getValue();
                 if (!commitBlobs.containsKey(filename) || !commitBlobs.containsValue(id)) {
@@ -270,14 +271,14 @@ public class Repository {
      */
     public static void rm(String filename) {
         String branch = readContentsAsString(HEAD_FILE);
-        Index index = readObject(INDEX_FILE, Index.class);
+        Index index = readObject(Index.INDEX_FILE, Index.class);
         Commit currentCommit = readObject(new File(Commit.COMMITS_DIR,
                 readContentsAsString(new File(BRANCH_DIR, branch))), Commit.class);
         File removedFile = new File(join(CWD), filename);
         String id = currentCommit.getBlobMap().get(filename);
         // The head commit neither stages nor tracks the file
-        if (!index.addContainsFile(filename) && !index.removeContainsFile(filename) &&
-                !currentCommit.containsFile(filename)) {
+        if (!index.addContainsFile(filename) && !index.removeContainsFile(filename)
+                && !currentCommit.containsFile(filename)) {
             Utils.message("No reason to remove the file.");
             System.exit(0);
         } else if (index.addContainsFile(filename)) {
@@ -304,7 +305,7 @@ public class Repository {
      * The concrete format is implemented in the Commit.dump() method.
      */
     public static void log() {
-        // TODO: check if have conflicts with merge?
+        //  we'll deal merge commit later.
         String branch = readContentsAsString(HEAD_FILE);
         Commit currentCommit = readObject(new File(Commit.COMMITS_DIR,
                 readContentsAsString(new File(BRANCH_DIR, branch))), Commit.class);
@@ -401,7 +402,7 @@ public class Repository {
      * As a helper method to print the index(stage area).
      */
     private static void printIndex() {
-        Index index = readObject(INDEX_FILE, Index.class);
+        Index index = readObject(Index.INDEX_FILE, Index.class);
         Map<String, String> stageBlobs = index.getAddBlobs();
         Map<String, String> removeStageBlobs = index.getRemoveBlobs();
         System.out.println("=== Staged Files ===");
@@ -422,12 +423,11 @@ public class Repository {
      * As a helper method to print the modified files.
      */
     private static void printModifiedFiles() {
-        // TODO: Find bugs here.
         String branch = readContentsAsString(HEAD_FILE);
         Commit currentCommit = readObject(new File(Commit.COMMITS_DIR,
                 readContentsAsString(new File(BRANCH_DIR, branch))), Commit.class);
         Map<String, String> currentBlob = currentCommit.getBlobMap();
-        Index index = readObject(INDEX_FILE, Index.class);
+        Index index = readObject(Index.INDEX_FILE, Index.class);
         List<String> workingFiles = plainFilenamesIn(CWD);
         System.out.println("=== Modifications Not Staged For Commit ===");
         // There have 4 cases that a file "is modified but not staged".
@@ -465,8 +465,8 @@ public class Repository {
                 String filename = entry.getKey();
                 File file = new File(join(CWD), filename);
                 // case 4
-                if (!index.removeContainsFile(filename) &&
-                        currentCommit.containsFile(filename) && !file.exists()) {
+                if (!index.removeContainsFile(filename)
+                        && currentCommit.containsFile(filename) && !file.exists()) {
                     System.out.println(filename + " (deleted)");
                 }
             }
@@ -482,8 +482,7 @@ public class Repository {
         // files present in the working directory but neither staged for addition nor tracked.
         String branch = readContentsAsString(HEAD_FILE);
         List<String> workingFiles = plainFilenamesIn(CWD);
-        List<String> blobFiles = plainFilenamesIn(Blob.BLOBS_DIR);
-        Index index = readObject(INDEX_FILE, Index.class);
+        Index index = readObject(Index.INDEX_FILE, Index.class);
         // "Untracked Files” is for files present in the working directory
         // but neither staged for addition nor tracked
         // (only tracked by the parent commit (single))
@@ -492,8 +491,8 @@ public class Repository {
             for (String filename : workingFiles) {
                 Commit currentCommit = readObject(new File(Commit.COMMITS_DIR,
                         readContentsAsString(new File(BRANCH_DIR, branch))), Commit.class);
-                if (!index.addContainsFile(filename) && !index.removeContainsFile(filename) &&
-                        !currentCommit.containsFile(filename)) {
+                if (!index.addContainsFile(filename) && !index.removeContainsFile(filename)
+                        && !currentCommit.containsFile(filename)) {
                     System.out.println(filename);
                 }
             }
@@ -512,7 +511,7 @@ public class Repository {
         String currentBranch = readContentsAsString(HEAD_FILE);
         Commit currentCommit = readObject(new File(Commit.COMMITS_DIR,
                 readContentsAsString(new File(BRANCH_DIR, currentBranch))), Commit.class);
-        Index index = readObject(INDEX_FILE, Index.class);
+        Index index = readObject(Index.INDEX_FILE, Index.class);
         if (!isBranch) {
             // arg is filename
             boolean containsFile = currentCommit.containsFile(arg);
@@ -525,6 +524,10 @@ public class Repository {
             }
         } else {
             // arg is branchName
+            // this is for the remote branch.
+            if (arg.contains("/")) {
+                arg = arg.replaceFirst("/", "");
+            }
             File branchFile = new File(BRANCH_DIR, arg);
             boolean containsBranchFile = branchFile.exists();
             if (!containsBranchFile) {
@@ -553,13 +556,12 @@ public class Repository {
      * @param newBLobs the map of blobs in the new commit.
      */
     private static void fileOperation(Map<String, String> oldBlobs, Map<String, String> newBLobs) {
-        // TODO: Find bugs here.
         // Three cases:
         // 1. The file is in both commits, but with different contents or same contents.
         // 2. The file is in the current commit but not in the new commit.
         // 3. The file is in the new commit but not in the current commit.
         // Use single loop to optimize the performance.
-        Index index = readObject(INDEX_FILE, Index.class);
+        Index index = readObject(Index.INDEX_FILE, Index.class);
         if (!newBLobs.isEmpty()) {
             for (Map.Entry<String, String> newEntry : newBLobs.entrySet()) {
                 String newFilename = newEntry.getKey();
@@ -574,12 +576,12 @@ public class Repository {
                         try {
                             boolean fileExists = file.createNewFile();
                             writeContents(file, content);
-                        } catch (Exception e) {
+                        } catch (IOException e) {
                             System.err.println("Error: Could not create file.");
                         }
                     } else {
-                        message("There is an untracked file in the way; " +
-                                "delete it, or add and commit it first.");
+                        message("There is an untracked file in the way; "
+                                + "delete it, or add and commit it first.");
                         System.exit(0);
                     }
                     // Only case 3 (checkout of a full branch) modifies the staging area:
@@ -639,8 +641,14 @@ public class Repository {
         }
     }
 
+    /**
+     * As a helper method to get the commit id.
+     *
+     * @param commitId the abbreviated id of the commit to use.
+     * @return the full commit id.
+     */
     private static String getCommitId(String commitId) {
-        boolean isAbbreviated = commitId.length() < 40;
+        boolean isAbbreviated = commitId.length() < SHA1_LENGTH;
         List<String> commitsList = plainFilenamesIn(Commit.COMMITS_DIR);
         if (commitsList != null && !commitsList.isEmpty()) {
             for (String commit : commitsList) {
@@ -678,7 +686,7 @@ public class Repository {
             try {
                 boolean fileExist = file.createNewFile();
                 writeContents(file, content);
-            } catch (Exception e) {
+            } catch (IOException e) {
                 System.err.println("Error: Could not create file.");
             }
         }
@@ -700,7 +708,7 @@ public class Repository {
             try {
                 boolean branchExist = branchFile.createNewFile();
                 writeContents(branchFile, currentCommit.getId());
-            } catch (Exception e) {
+            } catch (IOException e) {
                 System.err.println("Error: Could not create branch.");
             }
         } else {
@@ -743,7 +751,7 @@ public class Repository {
         String currentBranch = readContentsAsString(HEAD_FILE);
         Commit currentCommit = readObject(new File(Commit.COMMITS_DIR,
                 readContentsAsString(new File(BRANCH_DIR, currentBranch))), Commit.class);
-        Index index = readObject(INDEX_FILE, Index.class);
+        Index index = readObject(Index.INDEX_FILE, Index.class);
         commitId = getCommitId(commitId);
         Commit newCommit = readObject(new File(Commit.COMMITS_DIR, commitId), Commit.class);
         Map<String, String> oldBlobs = currentCommit.getBlobMap();
@@ -771,7 +779,7 @@ public class Repository {
      */
     public static void merge(String branchName) {
         // step1:find the split point
-        Index index = readObject(INDEX_FILE, Index.class);
+        Index index = readObject(Index.INDEX_FILE, Index.class);
         // If there are staged additions or removals present
         if (!index.addIsEmpty() || !index.removeIsEmpty()) {
             message("You have uncommitted changes.");
@@ -810,19 +818,44 @@ public class Repository {
             // step2: merge the files
             fileOperation(mutualParentCommit, currentCommit, mergeCommit);
             // step3: create a new commit
-            index = readObject(INDEX_FILE, Index.class);
+            index = readObject(Index.INDEX_FILE, Index.class);
             Map<String, String> finalBlobs = dealWithStageAndCommitBlobs(index, currentCommit);
             List<String> parents = new ArrayList<>();
             parents.add(currentCommit.getId());
             parents.add(mergeCommit.getId());
-            Commit newCommit = new Commit("Merged " + branchName + " into " + currentBranch + ".",
-                    new Date(), parents, finalBlobs);
-            // step4: update the HEAD file to point to the new commit.
-            writeContents(branchFile, newCommit.getId());
-            index.clearFile();
+            // This is for the case where the branch name is./...,
+            // we modified it to .+..., otherwise it can't pass the test.
+            // So we need to handle this case separately.
+            List<String> remoteBranchList = plainFilenamesIn(REMOTE_DIR);
+            if (remoteBranchList != null && !remoteBranchList.isEmpty()) {
+                for (String remoteBranch : remoteBranchList) {
+                    if (branchName.contains(remoteBranch)) {
+                        Commit newCommit = new Commit("Merged " + remoteBranch
+                                + "/" + branchName.replace(remoteBranch, "")
+                                + " into " + currentBranch + ".", new Date(), parents, finalBlobs);
+                        // step4: update the HEAD file to point to the new commit.
+                        writeContents(branchFile, newCommit.getId());
+                        index.clearFile();
+                        break;
+                    }
+                }
+            } else {
+                Commit newCommit = new Commit("Merged " + branchName + " into " + currentBranch + ".",
+                        new Date(), parents, finalBlobs);
+                // step4: update the HEAD file to point to the new commit.
+                writeContents(branchFile, newCommit.getId());
+                index.clearFile();
+            }
         }
     }
 
+    /**
+     * As a helper method to add or remove the bobs in the current commit.
+     *
+     * @param index         the index object which contains the add and remove blobs.
+     * @param currentCommit the map of blobs in the current commit.
+     * @return the final map of blobs.
+     */
     private static Map<String, String> dealWithStageAndCommitBlobs(Index index, Commit currentCommit) {
         Map<String, String> stageBlobs = index.getAddBlobs();
         Map<String, String> removeBlobs = index.getRemoveBlobs();
@@ -836,85 +869,27 @@ public class Repository {
      * @param mutualCommit  the common ancestor commit.
      * @param currentCommit the current commit.
      * @param mergeCommit   the merge commit.
-     *                      &#064;source   from <a href="https://zhuanlan.zhihu.com/p/533852291">...</a> and
-     *                      <a href="https://www.youtube.com/watch?v=JR3OYCMv9b4&t=929s">...</a> ,which use the ideology of using
-     *                      a <value(id),key(filename)> map to represent the files in the three commits.
+     * @source from <a href="https://zhuanlan.zhihu.com/p/533852291">...</a> and
+     * <a href="https://www.youtube.com/watch?v=JR3OYCMv9b4&t=929s">...</a> ,which use the ideology of using
+     * a <value(id),key(filename)> map to represent the files in the three commits.
      */
     private static void fileOperation(Commit mutualCommit,
                                       Commit currentCommit,
                                       Commit mergeCommit) {
-        // first: find all the files that are in different branches
-        Index index = readObject(INDEX_FILE, Index.class);
-        // use new keywords to avoid modifying the original maps
+        Index index = readObject(Index.INDEX_FILE, Index.class);
         Map<String, String> mutualBlobs = new TreeMap<>(mutualCommit.getBlobMap());
         Map<String, String> currentBlobs = new TreeMap<>(currentCommit.getBlobMap());
         Map<String, String> mergeBlobs = new TreeMap<>(mergeCommit.getBlobMap());
         Map<String, String> allBlobs = getAllBlobs(mutualBlobs, currentBlobs, mergeBlobs);
-        // Second: merge the files
-        // There are 8 cases:
-        // 1. Modified in merge branch but not in current branch,
-        // the result is the merge branch's version.
-        // 2. Modified in current branch but not in merge branch,
-        // the result is the current branch's version.
-        // 3. Modified in both branches:
-        //     3.1.
-        //     The two versions are the same, the result is the same version.
-        //     3.2.
-        //     The two versions are different, the result is the conflicted version.
-        // 4. Not in split point nor in merge branch, but in current branch,
-        // the result is the current branch's version.
-        // 5. Not in split point nor in the current branch,
-        // but in merge branch, the result is the merge branch's version.
-        // 6. Unmodified in the current branch but not present in the merge branch,
-        // the result is the merge branch's version.(removed)
-        // 7. Unmodified in the merge branch but not present in the current branch,
-        // the result is the current branch's version.(remain removed)
-
-        // The only way we distinguish files is by theirs id.
-        // Because the files maybe deleted first,so we need
-        // to check if the files are deleted in the current branch
-        // or the merge branch or in the split point.
         for (Map.Entry<String, String> entry : allBlobs.entrySet()) {
             String filename = entry.getKey();
             String id = entry.getValue();
-            // Case 4,
-            // the file isn't in the merge branch and not in the split point,
-            // (This means split point and merge branch can't have this file)
-            // but in the current branch.
-            // The file isn't new for the current branch.
-            // So we do nothing.
-            if (!containSameFile(mutualCommit, filename, id) && !containSameFile(mergeCommit, filename, id)
-                    && !mutualCommit.containsFile(filename) && !mergeCommit.containsFile(filename)
-                    && containSameFile(currentCommit, filename, id)) {
+            if (handleCase4(mutualCommit, currentCommit, mergeCommit, filename, id)) {
                 continue;
             }
-            // Case 5,
-            // the file isn't in the current branch and not in the split point,
-            // (This means split point and current branch can't have this file)
-            // but in the merge branch.
-            // The file is new for the current branch.
-            // So we create a new file and add it to the index.
-            if (!containSameFile(mutualCommit, filename, id) && !containSameFile(currentCommit, filename, id)
-                    && !mutualCommit.containsFile(filename) && !currentCommit.containsFile(filename)
-                    && containSameFile(mergeCommit, filename, id)) {
-                checkFiles(currentCommit, mergeCommit);
-                Blob blob = Blob.fromFile(id);
-                String content = blob.getContent();
-                File file = new File(CWD, filename);
-                try {
-                    file.createNewFile();
-                    writeContents(file, content);
-                    index.addAdd(blob);
-                    continue;
-                } catch (Exception e) {
-                    System.err.println("Error: Could not create file.");
-                }
+            if (handleCase5(mutualCommit, currentCommit, mergeCommit, filename, id, index)) {
+                continue;
             }
-            // Case 6,
-            // the file is unmodified in the current branch,
-            // but not present in the merge branch.
-            // This means the file is deleted in the merge branch.
-            // So we remove it from the CWD and the index.
             if (containSameFile(mutualCommit, filename, id) && !modified(currentCommit, filename, id)
                     && !mergeCommit.containsFile(filename)) {
                 checkFiles(currentCommit, mergeCommit);
@@ -924,18 +899,10 @@ public class Repository {
                 index.removeAdd(blob);
                 continue;
             }
-            // Case 7
-            // the file is unmodified in the merge branch,
-            // but not present in the current branch.
-            // This means the file is deleted in the current branch.
-            // So we do nothing.
             if (containSameFile(mutualCommit, filename, id) && !modified(mergeCommit, filename, id)
                     && !currentCommit.containsFile(filename)) {
                 continue;
             }
-            // all possible cases about case 3 are following:
-            // Case 3.1
-            // (not in the split point, but in both branches, and have the same contents(same id))
             if (!mutualCommit.containsFile(filename) && containSameFile(currentCommit, filename, id)
                     && containSameFile(mergeCommit, filename, id)
                     && currentCommit.getBlobMap().get(filename).equals(mergeCommit.getBlobMap().get(filename))) {
@@ -946,66 +913,24 @@ public class Repository {
                     file.createNewFile();
                     writeContents(file, content);
                     continue;
-                } catch (Exception e) {
+                } catch (IOException e) {
                     System.err.println("Error: Could not merge file.");
                 }
             }
-            // Case 3.1
-            // (in the split point, but not in both branches, they are deleted in both branches)
-            // So we do nothing.
             if (containSameFile(mutualCommit, filename, id) && !currentCommit.containsFile(filename)
                     && !mergeCommit.containsFile(filename)) {
                 continue;
             }
-            // case 3.1 not changed
             if (!modified(currentCommit, filename, id) && !modified(mergeCommit, filename, id)) {
-                // They both didn't modify the files
-                // The result is the same version.
-                // Do nothing.
                 continue;
             }
-            // case 3.1 modified in the same way
             if (modified(currentCommit, filename, id) && modified(mergeCommit, filename, id)
                     && currentCommit.getBlobMap().get(filename).equals(mergeCommit.getBlobMap().get(filename))) {
-                // They both modified the file in the same way.
-                // The result is the same version.
-                // Do nothing.
                 continue;
             }
-            // Case 3.2
-            //  file is in the split point,
-            //  but not present in the current branch and modified in the merge branch.
-            if (containSameFile(mutualCommit, filename, id) && !currentCommit.containsFile(filename)
-                    && modified(mergeCommit, filename, id)) {
-                // The file is modified in the merge branch,
-                // and deleted in the current branch.
-                // The result is the conflicted version.
-                message("Encountered a merge conflict.");
-                handleConflicts(currentCommit, mergeCommit, filename);
+            if (encounterConflicts(mutualCommit, currentCommit, mergeCommit, filename, id)) {
                 continue;
             }
-            // Case 3.2
-            //  file is in the split point,
-            //  but not present in the merge branch and modified in the current branch.
-            if (containSameFile(mutualCommit, filename, id) && !mergeCommit.containsFile(filename)
-                    && modified(currentCommit, filename, id)) {
-                message("Encountered a merge conflict.");
-                handleConflicts(currentCommit, mergeCommit, filename);
-                continue;
-            }
-            // Case 3.2
-            //  file is in the split point,
-            //  but modified in both branches in different way.
-            if (containSameFile(mutualCommit, filename, id) && modified(currentCommit, filename, id)
-                    && modified(mergeCommit, filename, id)) {
-                message("Encountered a merge conflict.");
-                handleConflicts(currentCommit, mergeCommit, filename);
-                continue;
-            }
-            // Case 1
-            // modified(not including deleted) in merge branch but not in current branch,
-            // the deletion is handled in case 6.
-            // → The merge branch's version.
             if (modified(mergeCommit, filename, id) && !modified(currentCommit, filename, id)) {
                 checkFiles(currentCommit, mergeCommit);
                 String newId = mergeCommit.getBlobMap().get(filename);
@@ -1016,16 +941,96 @@ public class Repository {
                 index.addAdd(blob);
                 continue;
             }
-            // Case 2
-            // modified in current branch but not in merge branch,
-            // the deletion case is handled in case 7.
-            // → The current branch's version.
             if (modified(currentCommit, filename, id) && !modified(mergeCommit, filename, id)) {
-                // Do nothing.
                 continue;
             }
         }
         index.saveFile();
+    }
+
+    /**
+     * As a helper method to handle case 5.
+     *
+     * @param mutualCommit  the common ancestor commit.
+     * @param currentCommit the current commit.
+     * @param mergeCommit   the merge commit.
+     * @param filename      the filename of the file.
+     * @param id            the id of the file.
+     * @param index         the index object which contains the add and remove blobs.
+     * @return true if the case is handled, false otherwise.
+     */
+    private static boolean handleCase5(Commit mutualCommit, Commit currentCommit,
+                                       Commit mergeCommit, String filename, String id, Index index) {
+        if (!containSameFile(mutualCommit, filename, id) && !containSameFile(currentCommit, filename, id)
+                && !mutualCommit.containsFile(filename) && !currentCommit.containsFile(filename)
+                && containSameFile(mergeCommit, filename, id)) {
+            checkFiles(currentCommit, mergeCommit);
+            Blob blob = Blob.fromFile(id);
+            String content = blob.getContent();
+            File file = new File(CWD, filename);
+            try {
+                file.createNewFile();
+                writeContents(file, content);
+                index.addAdd(blob);
+                return true;
+            } catch (IOException e) {
+                System.err.println("Error: Could not create file.");
+            }
+        }
+        return false;
+    }
+
+    /**
+     * As a helper method to handle case 4.
+     *
+     * @param mutualCommit  the common ancestor commit.
+     * @param currentCommit the current commit.
+     * @param mergeCommit   the merge commit.
+     * @param filename      the filename of the conflicted file.
+     * @param id            the id of the conflicted file.
+     * @return true if the case is handled, false otherwise.
+     */
+    private static boolean handleCase4(Commit mutualCommit, Commit currentCommit,
+                                       Commit mergeCommit, String filename, String id) {
+        if (!containSameFile(mutualCommit, filename, id) && !containSameFile(mergeCommit, filename, id)
+                && !mutualCommit.containsFile(filename) && !mergeCommit.containsFile(filename)
+                && containSameFile(currentCommit, filename, id)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * As a helper method to handle the conflicts.
+     *
+     * @param mutualCommit  the common ancestor commit.
+     * @param currentCommit the current commit.
+     * @param mergeCommit   the merge commit.
+     * @param filename      the filename of the conflicted file.
+     * @param id            the id of the conflicted file.
+     * @return true if there's a conflict, false otherwise.
+     */
+    private static boolean encounterConflicts(Commit mutualCommit, Commit currentCommit,
+                                              Commit mergeCommit, String filename, String id) {
+        if (containSameFile(mutualCommit, filename, id) && !currentCommit.containsFile(filename)
+                && modified(mergeCommit, filename, id)) {
+            message("Encountered a merge conflict.");
+            handleConflicts(currentCommit, mergeCommit, filename);
+            return true;
+        }
+        if (containSameFile(mutualCommit, filename, id) && !mergeCommit.containsFile(filename)
+                && modified(currentCommit, filename, id)) {
+            message("Encountered a merge conflict.");
+            handleConflicts(currentCommit, mergeCommit, filename);
+            return true;
+        }
+        if (containSameFile(mutualCommit, filename, id) && modified(currentCommit, filename, id)
+                && modified(mergeCommit, filename, id)) {
+            message("Encountered a merge conflict.");
+            handleConflicts(currentCommit, mergeCommit, filename);
+            return true;
+        }
+        return false;
     }
 
 
@@ -1039,13 +1044,27 @@ public class Repository {
         return !commit.containsFile(filename) || !commit.containsId(id);
     }
 
+    /**
+     * As a helper method to check if a commit contains the same file with the given id and filename.
+     *
+     * @param commit   the commit to check.
+     * @param filename the filename to check.
+     * @param id       the id to check.
+     */
     private static boolean containSameFile(Commit commit, String filename, String id) {
         return commit.containsId(id) && commit.containsFile(filename);
     }
 
+    /**
+     * As a helper method to handle the conflicts.
+     *
+     * @param currentCommit the current commit.
+     * @param mergeCommit   the merge commit.
+     * @param filename      the filename of the conflicted file.
+     */
     private static void handleConflicts(Commit currentCommit, Commit mergeCommit,
                                         String filename) {
-        Index index = readObject(INDEX_FILE, Index.class);
+        Index index = readObject(Index.INDEX_FILE, Index.class);
         String currentId = currentCommit.getBlobMap().get(filename);
         String mergeId = mergeCommit.getBlobMap().get(filename);
         if (currentId == null) {
@@ -1098,17 +1117,21 @@ public class Repository {
         return allBlobs;
     }
 
+    /**
+     * As a helper method to check files only tracked by merge commits.
+     *
+     * @param currentCommit the current commit.
+     * @param mergeCommit   the merge commit.
+     */
     private static void checkFiles(Commit currentCommit, Commit mergeCommit) {
         // If the merge overwrites or deletes an untracked file in the current commit
-        String branch = readContentsAsString(HEAD_FILE);
         List<String> workingFiles = plainFilenamesIn(CWD);
-        Index index = readObject(INDEX_FILE, Index.class);
         if (workingFiles != null && !workingFiles.isEmpty()) {
             for (String filename : workingFiles) {
                 if (mergeCommit.containsFile(filename) && !currentCommit.containsFile(filename)) {
                     // If the file is modified in the current commit,
-                    message("There is an untracked file in the way; delete it, " +
-                            "or add and commit it first.");
+                    message("There is an untracked file in the way; delete it, "
+                            + "or add and commit it first.");
                     System.exit(0);
                 }
             }
@@ -1152,9 +1175,8 @@ public class Repository {
                     // If the parent commit is already in the visited nodes of iterator 2.
                     if (visited2.contains(parent)) {
                         return readObject(new File(Commit.COMMITS_DIR, parent), Commit.class);
-                    }
-                    // Otherwise continue traversing
-                    else if (!visited1.contains(parent)) {
+                    } else if (!visited1.contains(parent)) {
+                        // Otherwise continue traversing
                         q1.add(parent);
                         visited1.add(parent);
                     }
@@ -1181,6 +1203,12 @@ public class Repository {
         return null;
     }
 
+    /**
+     * Saves the given login information under the given remote name.
+     *
+     * @param name          the name of the remote.
+     * @param directoryPath the directory path of the remote.
+     */
     public static void addRemote(String name, String directoryPath) {
         File remoteFile = new File(REMOTE_DIR, name);
         if (remoteFile.exists()) {
@@ -1191,26 +1219,33 @@ public class Repository {
                 remoteFile.createNewFile();
                 String path = directoryPath.replace("/", java.io.File.separator);
                 writeContents(remoteFile, path);
-            } catch (Exception e) {
+            } catch (IOException e) {
                 message("Error: Could not add remote.");
             }
         }
     }
 
+    /**
+     * Remove information associated with the given remote name.
+     *
+     * @param name the name of the remote to remove.
+     */
     public static void rmRemote(String name) {
         File remoteFile = new File(REMOTE_DIR, name);
         if (remoteFile.exists()) {
-            try {
-                remoteFile.delete();
-            } catch (Exception e) {
-                message("Error: Could not remove remote.");
-            }
+            remoteFile.delete();
         } else {
             message("A remote with that name does not exist.");
             System.exit(0);
         }
     }
 
+    /**
+     * Attempts to append the current branch’s commits to the end of the given branch at the given remote
+     *
+     * @param remoteName       the name of the remote.
+     * @param remoteBranchName the name of the remote branch.
+     */
     public static void push(String remoteName, String remoteBranchName) {
         // Check if the remote exists
         String remotePath = readContentsAsString(new File(REMOTE_DIR, remoteName));
@@ -1223,7 +1258,7 @@ public class Repository {
         if (!remoteBranchFile.exists()) {
             try {
                 remoteBranchFile.createNewFile();
-            } catch (Exception e) {
+            } catch (IOException e) {
                 System.err.println("Error: Could not create remote branch file.");
             }
         }
@@ -1236,20 +1271,28 @@ public class Repository {
         String currentBranch = readContentsAsString(HEAD_FILE);
         Commit currentCommit = readObject(new File(Commit.COMMITS_DIR,
                 readContentsAsString(new File(BRANCH_DIR, currentBranch))), Commit.class);
-        File remoteCommitDir = join(remoteGitletDir, "objects/commits/");
+        File remoteCommitDir = join(remoteGitletDir, "objects", "commits");
+        File remoteCommitFile = new File(remoteCommitDir, currentCommit.getId());
+        writeObject(remoteCommitFile, currentCommit);
         List<String> listOfParents = currentCommit.getParents();
-        writeObject(remoteCommitDir, currentCommit);
         while (!listOfParents.isEmpty()) {
             Commit parentCommit = readObject(new File(Commit.COMMITS_DIR, listOfParents.get(0)), Commit.class);
             if (parentCommit.getId().equals(remoteCommitId)) {
                 break;
             }
-            writeObject(remoteCommitDir, parentCommit);
+            File parentCommitFile = new File(remoteCommitDir, parentCommit.getId());
+            writeObject(parentCommitFile, parentCommit);
             listOfParents = parentCommit.getParents();
         }
         writeContents(remoteBranchFile, currentCommit.getId());
     }
 
+    /**
+     * Brings down commits from the remote Gitlet repository into the local Gitlet repository.
+     *
+     * @param remoteName       the name of the remote.
+     * @param remoteBranchName the name of the remote branch.
+     */
     public static void fetch(String remoteName, String remoteBranchName) {
         // Check if the remote exists
         String remotePath = readContentsAsString(new File(REMOTE_DIR, remoteName));
@@ -1263,7 +1306,10 @@ public class Repository {
             message("That remote does not have that branch.");
             System.exit(0);
         }
-        String newBranchName = remoteName + "/" + remoteBranchName;
+        // because windows can't create a file with a colon in the name,
+        // we use the remote name and branch name as the branch name,
+        // so we also need to modify in the checkout method
+        String newBranchName = remoteName + remoteBranchName;
         File fetchBranchFile = new File(BRANCH_DIR, newBranchName);
         if (!fetchBranchFile.exists()) {
             try {
@@ -1274,34 +1320,55 @@ public class Repository {
         }
         List<String> allCommits = plainFilenamesIn(Commit.COMMITS_DIR);
         List<String> allBlobs = plainFilenamesIn(Blob.BLOBS_DIR);
-        Commit remoteCommit = readObject(new File(readContentsAsString(remoteBranchFile)), Commit.class);
-        writeCommitsAndBlobs(allCommits, allBlobs, remoteCommit);
+        File remoteCommitDir = join(remoteGitletDir, "objects", "commits");
+        File remoteBlobDir = join(remoteGitletDir, "objects", "blobs");
+        Commit remoteCommit = readObject(new File(remoteCommitDir,
+                readContentsAsString(remoteBranchFile)), Commit.class);
+        // first, write the remote commit and its corresponding blobs to the local repository
+        // if it doesn't already exist
+        writeCommitsAndBlobs(allCommits, allBlobs, remoteBlobDir, remoteCommit);
         List<String> listOfParents = remoteCommit.getParents();
         while (listOfParents != null && !listOfParents.isEmpty()) {
             Commit parentCommit = readObject(new File(Commit.COMMITS_DIR, listOfParents.get(0)), Commit.class);
-            writeCommitsAndBlobs(allCommits, allBlobs, parentCommit);
+            writeCommitsAndBlobs(allCommits, allBlobs, remoteBlobDir, remoteCommit);
             listOfParents = parentCommit.getParents();
         }
-        String currentBranch = readContentsAsString(HEAD_FILE);
-        writeContents(fetchBranchFile, readContentsAsString(new File(BRANCH_DIR, currentBranch)));
+        writeContents(fetchBranchFile, remoteCommit.getId());
     }
 
-    private static void writeCommitsAndBlobs(List<String> listOfCommits, List<String> listOfBlobs,
-                                             Commit remoteCommit) {
-        if (listOfCommits != null && !listOfCommits.contains(remoteCommit.getId())) {
-            writeObject(Commit.COMMITS_DIR, remoteCommit);
+    /**
+     * Helper method to write commits and blobs to the local repository.
+     *
+     * @param allCommits    the list of all commit ids in the local repository.
+     * @param allBlobs      the list of all blob ids in the local repository.
+     * @param remoteBlobDir the directory of the remote blobs.
+     * @param remoteCommit  the remote commit to write.
+     */
+    private static void writeCommitsAndBlobs(List<String> allCommits, List<String> allBlobs,
+                                             File remoteBlobDir, Commit remoteCommit) {
+        if (allCommits != null && !allCommits.contains(remoteCommit.getId())) {
+            File commitFile = new File(Commit.COMMITS_DIR, remoteCommit.getId());
+            writeObject(commitFile, remoteCommit);
         }
         for (Map.Entry<String, String> entry : remoteCommit.getBlobMap().entrySet()) {
-            Blob blob = Blob.fromFile(entry.getValue());
-            if (listOfBlobs != null && !listOfBlobs.contains(blob.getId())) {
-                writeObject(Blob.BLOBS_DIR, blob);
+            Blob blob = readObject(new File(remoteBlobDir, entry.getValue()), Blob.class);
+            if (allBlobs != null && !allBlobs.contains(entry.getValue())) {
+                File blobFile = new File(Blob.BLOBS_DIR, entry.getValue());
+                writeObject(blobFile, blob);
             }
         }
     }
 
+    /**
+     * Fetches branch [remote name]/[remote branch name] as for the fetch command,
+     * and then merges that fetch into the current branch.
+     *
+     * @param remoteName       the name of the remote.
+     * @param remoteBranchName the name of the remote branch.
+     */
     public static void pull(String remoteName, String remoteBranchName) {
         fetch(remoteName, remoteBranchName);
-        merge(remoteBranchName);
+        merge(remoteName + remoteBranchName);
     }
 }
 
