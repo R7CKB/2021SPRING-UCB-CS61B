@@ -1076,7 +1076,8 @@ public class Repository {
     }
 
     /**
-     * As a helper method to check if a commit contains the same file with the given id and filename.
+     * As a helper method to check if a commit contains
+     * the same file with the given id and filename.
      *
      * @param commit   the commit to check.
      * @param filename the filename to check.
