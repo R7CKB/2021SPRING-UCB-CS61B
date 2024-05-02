@@ -44,8 +44,10 @@ public class Index implements Serializable {
     /**
      * Creates a new index with the given add and remove entries.
      *
-     * @param addEntries    the adding entries of the index, mapping filenames to their corresponding blob ids.
-     * @param removeEntries the remove entries of the index, mapping filenames to their corresponding blob ids.
+     * @param addEntries    the adding entries of the index,
+     *                      mapping filenames to their corresponding blob ids.
+     * @param removeEntries the remove entries of the index,
+     *                      mapping filenames to their corresponding blob ids.
      */
     public Index(Map<String, String> addEntries, Map<String, String> removeEntries) {
         this.addEntries = addEntries;
@@ -94,7 +96,8 @@ public class Index implements Serializable {
      * Returns false otherwise.
      *
      * @param filename the filename of the added entry(AKA Key).
-     * @return the boolean value indicating whether the added entry of the index with the given filename.
+     * @return the boolean value indicating whether
+     * the added entry of the index contains the given filename.
      */
     public boolean addContainsFile(String filename) {
         if (addEntries.isEmpty()) {
@@ -122,7 +125,8 @@ public class Index implements Serializable {
      * Returns false otherwise.
      *
      * @param filename the filename of the removed entry(AKA Key).
-     * @return the boolean value indicating whether the removed entry of the index with the given filename.
+     * @return the boolean value indicating whether
+     * the removed entry of the index contains the given filename.
      */
     public boolean removeContainsFile(String filename) {
         if (removeEntries.isEmpty()) {
@@ -136,7 +140,8 @@ public class Index implements Serializable {
      * Returns false otherwise.
      *
      * @param id the value of the id of the removed entry(AKA Value).
-     * @return the boolean value indicating whether the removed entry of the index with the given id.
+     * @return the boolean value indicating whether
+     * the removed entry of the index contains the given id.
      */
     public boolean removeContainsId(String id) {
         if (removeEntries.isEmpty()) {
